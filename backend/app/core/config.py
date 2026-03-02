@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # Legge da variabili d'ambiente e anche da .env (in dev)
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="../.env",
         env_prefix="APP_",
         case_sensitive=False,
         extra="ignore",  # ignora variabili sconosciute

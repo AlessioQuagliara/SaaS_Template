@@ -9,17 +9,24 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 
+from sqlalchemy.orm import declarative_base
+
 from app.core.config import settings
 
 from typing import AsyncGenerator
 
+# Definisco Base
+Base = declarative_base()
 
 # Creazione motore "engine" del db con pool di connessioni
 engine = create_async_engine(
     settings.database_url,
     echo=False,
     future=True,
-    pool_pre_ping=True
+    pool_pre_ping=True,
+    pool_size=5,       
+    max_overflow=5,    
+    pool_timeout=30,
 )
 
 # Struttura per creare sessioni asincrone per richiesta

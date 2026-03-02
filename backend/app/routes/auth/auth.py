@@ -4,10 +4,21 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Form, Request, status
+from fastapi import APIRouter, Form, Request, status, Depends, HTTPException, Response
+
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from sqlalchemy import select
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core import templates
+
+from app.core.database import get_db
+
+from app.core.sicurezza import verifica_password_async
+
+from app.models import Utente, Tenant
 
 router = APIRouter()
 
@@ -16,6 +27,8 @@ router = APIRouter()
 # LOGIN -----------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
+
+# | -- Render pagina -----------------------------------------
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, next: str | None = None):
     return templates.TemplateResponse(
@@ -24,32 +37,98 @@ async def login_page(request: Request, next: str | None = None):
     )
 
 
+# | -- Azione Login -----------------------------------------
 @router.post("/login", response_class=HTMLResponse)
 async def login_submit(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
     next: str = Form("/"),
+    db: AsyncSession = Depends(get_db),
 ):
-    # TODO: replace with real auth.
-    ok = (email == "demo@demo.com" and password == "demo")
 
-    if not ok:
+
+    # ---- Trova utente attivo per email ----------------------
+    risultato = await db.execute(
+        select(Utente).where(
+            Utente.email == email,
+            Utente.attivo.is_(True),
+        )
+    )
+
+
+    utente = risultato.scalar_one_or_none()
+
+
+    # ---- Verifica password ----------------------------------
+    if utente is None or not verifica_password_async(password, utente.hashed_password):
         return templates.TemplateResponse(
             "auth/login.html",
-            {"request": request, "next": next, "error": "Credenziali non valide"},
+            {
+                "request": request,
+                "next": next,
+                "error": "Credenziali non valide",
+            },
             status_code=400,
         )
 
-    resp = RedirectResponse(url=next, status_code=status.HTTP_303_SEE_OTHER)
-    resp.set_cookie(
-        "session",
-        "fake-session-token",
+
+    # ---- Carica tenant dell'utente --------------------------
+    risultato_tenant = await db.execute(
+        select(Tenant).where(
+            Tenant.id == utente.tenant_id,
+            Tenant.attivo.is_(True),
+        )
+    )
+
+
+    tenant = risultato_tenant.scalar_one_or_none()
+
+
+    # ---- Verifica tenant -----------------------------------
+    if tenant is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant associato all'utente cancellato o non valido",
+        )
+
+
+    # ---- Costruisci URL di redirect ------------------------
+    # next "/" è il default del form, non una destinazione reale
+    redirect_url = next if next and next != "/" else f"/{tenant.slug}/admin/dashboard"
+
+
+    # ---- Richiesta HTMX: usa HX-Redirect -------------------
+    if request.headers.get("HX-Request") == "true":
+        risposta = Response(status_code=204)
+        risposta.set_cookie(
+            "id_sessione_utente",
+            str(utente.id),
+            httponly=True,
+            secure=False,  # In produzione: True con HTTPS
+            samesite="lax",
+        )
+        risposta.headers["HX-Redirect"] = redirect_url
+        return risposta
+
+
+    # ---- Richiesta normale: redirect 303 -------------------
+    risposta = RedirectResponse(
+        url=redirect_url,
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+    risposta.set_cookie(
+        "id_sessione_utente",
+        str(utente.id),
         httponly=True,
-        secure=True,
+        secure=False,  # In produzione mettere True per HTTPS
         samesite="lax",
     )
-    return resp
+
+
+    return risposta
 
 
 # -----------------------------------------------------------------------------
@@ -58,9 +137,14 @@ async def login_submit(
 
 @router.post("/logout")
 async def logout_submit():
-    resp = RedirectResponse(url="/auth/login", status_code=status.HTTP_303_SEE_OTHER)
-    resp.delete_cookie("session")
-    return resp
+    risposta = RedirectResponse(
+        url="/auth/login",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+    risposta.delete_cookie("id_sessione_utente")  
+    return risposta
+
 
 
 # -----------------------------------------------------------------------------

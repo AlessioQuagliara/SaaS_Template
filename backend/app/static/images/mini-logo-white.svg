@@ -3,7 +3,7 @@
     <filter id="Rettangolo_3">
       <feOffset dx="1" dy="1" input="SourceAlpha"/>
       <feGaussianBlur stdDeviation="45" result="blur"/>
-      <feFlood result="color"/>
+      <feFlood flood-opacity="0.502" result="color"/>
       <feComposite operator="out" in="SourceGraphic" in2="blur"/>
       <feComposite operator="in" in="color"/>
       <feComposite operator="in" in2="SourceGraphic"/>
@@ -15,20 +15,20 @@
       <feComposite operator="in" in2="blur-2"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="ST" x="774" y="813" width="1532" height="1455" filterUnits="userSpaceOnUse">
-      <feOffset dx="40" dy="40" input="SourceAlpha"/>
+    <filter id="ST" x="744" y="783" width="1532" height="1455" filterUnits="userSpaceOnUse">
+      <feOffset dx="10" dy="10" input="SourceAlpha"/>
       <feGaussianBlur stdDeviation="45" result="blur-3"/>
       <feFlood flood-opacity="0.576"/>
       <feComposite operator="in" in2="blur-3"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <clipPath id="clip-favicon_1">
+    <clipPath id="clip-favicon_2">
       <rect width="3000" height="3000"/>
     </clipPath>
   </defs>
-  <g id="favicon_1" data-name="favicon – 1" clip-path="url(#clip-favicon_1)">
+  <g id="favicon_2" data-name="favicon – 2" clip-path="url(#clip-favicon_2)">
     <g data-type="innerShadowGroup">
-      <rect id="Rettangolo_3-2" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)" fill="#333"/>
+      <rect id="Rettangolo_3-2" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)" fill="#fff"/>
       <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Rettangolo_3)">
         <rect id="Rettangolo_3-3" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)" fill="#fff"/>
       </g>
@@ -37,7 +37,7 @@
       <path id="Tracciato_167-2" data-name="Tracciato 167" d="M1466-3583l689.69-340.931L1999.677-3508.94,3061.9-3923.931,2594.245-3322.5,3966-3816.3,2356.164-3075.426l238.08-433.514L1557.537-3215.806l378.136-463.417Z" transform="translate(-1216 4999.68)" fill="#fdffca" stroke="rgba(191,175,0,0.38)" stroke-width="15"/>
     </g>
     <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#ST)">
-      <text id="ST-2" data-name="ST" transform="translate(1500 1845)" fill="#fff" stroke="#fff" stroke-width="30" font-size="1000" font-family="AndaleMono, Andale Mono"><tspan x="-600.098" y="0">ST</tspan></text>
+      <text id="ST-2" data-name="ST" transform="translate(1500 1845)" fill="#333" stroke="#333" stroke-width="30" font-size="1000" font-family="AndaleMono, Andale Mono"><tspan x="-600.098" y="0">ST</tspan></text>
     </g>
   </g>
 </svg>

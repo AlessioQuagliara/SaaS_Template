@@ -11,8 +11,7 @@ WORKDIR /app
 # package.json da installare all'avvio
 COPY package.json package-lock.json* ./
 
-RUN npm ci --include=optional \
-    && npm rebuild lightningcss
+RUN npm ci --include=optional 
 
 # Copia solo il resto del codice senza copiare node_modules
 COPY . .

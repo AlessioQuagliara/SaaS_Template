@@ -15,7 +15,8 @@
         
         {# Logo centrato (versione light per contrasto con sfondo scuro) #}
         <div class="absolute inset-0 flex items-center justify-center">
-            <img src="{{ url_for('static', path='/images/logo-light.svg') }}" alt="Logo" class="h-16 w-auto">
+            <img src="{{ url_for('static', path='/images/logo-light.png') }}" alt="Logo" class="h-16 w-auto dark:hidden">
+            <img src="{{ url_for('static', path='/images/logo-light.png') }}" alt="Logo" class="hidden h-16 w-auto dark:block">
         </div>
     </div>
 
@@ -24,8 +25,8 @@
         <div class="w-full max-w-md">
             {# Logo mobile (visibile solo su mobile) #}
             <div class="text-center md:hidden mb-8">
-                <img src="{{ url_for('static', path='/images/logo-dark.svg') }}" alt="Logo" class="h-12 mx-auto dark:hidden">
-                <img src="{{ url_for('static', path='/images/logo-light.svg') }}" alt="Logo" class="hidden h-12 mx-auto dark:block">
+                <img src="{{ url_for('static', path='/images/logo-dark.png') }}" alt="Logo" class="h-12 mx-auto dark:hidden">
+                <img src="{{ url_for('static', path='/images/logo-light.png') }}" alt="Logo" class="hidden h-12 mx-auto dark:block">
             </div>
 
             {# Intestazione #}

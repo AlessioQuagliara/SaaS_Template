@@ -75,6 +75,13 @@ services:
       dockerfile: Dockerfile
     container_name: saas_backend
     restart: unless-stopped
+    # Controlla se il backend risponde ancora
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/controlli/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     # Passa le variabili anche su Backend
     env_file:
       - .env

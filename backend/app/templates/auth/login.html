@@ -5,6 +5,7 @@
 {% extends "auth/base.html" %}
 
 {# Import delle macro necessarie #}
+
 {% from "components/buttons.html" import primary %}
 {% from "components/forms.html" import input %}
 {% from "components/badges.html" import danger as badge_danger %}
@@ -21,6 +22,7 @@
     class="space-y-6"
 >
     {# Mostra errori generali (es. credenziali errate) #}
+    
     {% if error %}
         <div class="mb-4">
             {{ badge_danger(error) }}
@@ -50,7 +52,7 @@
     <div class="flex items-center justify-between">
         {{ primary("Accedi", type="submit", attrs={"class": "w-full justify-center"}) }}
     </div>
-
+    
     {# Link opzionali #}
     <div class="text-sm text-center space-y-2">
         <a href="/auth/password-recovery" class="text-primary-600 hover:text-primary-500 dark:text-primary-400">
