@@ -1,5 +1,5 @@
 // =============================================================================
-// k6/test_login.js
+// test/test_login.js
 // =============================================================================
 
 import http from 'k6/http'
@@ -18,8 +18,8 @@ export default function () {
   const loginRes = http.post(
     `${BASE_URL}/auth/login`,
     {
-      email: 'info@spotexsrl.it',
-      password: 'WtQ5i8h20@',
+      email: 'info@demo.it', // Sostituisci con le tue credenziali
+      password: 'password@',
       next: '/',
     },
     {
