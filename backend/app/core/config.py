@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     reset_email_from: str = "SaaS Template <no-reply@linkbay-cms.com>"
     resend_dev_fallback_from: str = "SaaS Template <onboarding@resend.dev>"
     app_base_url: str = "http://admin.localhost:8000"
+    frontend_base_url: str = "http://www.localhost:3000"
 
     # Diamo un taglio! (Mettiamo un limite a redis)
     RATE_LIMIT_ENABLED: bool = True

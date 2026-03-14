@@ -18,6 +18,8 @@ from fastapi import FastAPI
 
 from app.core import engine
 
+from app.core.gestione_errori import registra_handler_globali
+
 from app.routes import router as api_router
 
 # =============================================================================
@@ -94,6 +96,7 @@ def create_app() -> FastAPI:
         #        pass
 
         app.include_router(api_router)
+        registra_handler_globali(app)
 
         return app
 

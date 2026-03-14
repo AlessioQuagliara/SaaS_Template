@@ -109,7 +109,6 @@ def contesto_registrazione(
 def costruisci_url_assoluto(percorso: str) -> str:
     return f"{settings.app_base_url.rstrip('/')}/{percorso.lstrip('/')}"
 
-
 # -----------------------------------------------------------------------------
 # LOGIN - GET
 # -----------------------------------------------------------------------------

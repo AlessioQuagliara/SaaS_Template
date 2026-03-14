@@ -1,0 +1,51 @@
+<!-- ======================================================================================= -->
+<!-- backend/app/templates/admin/errori/401 -->
+<!-- ======================================================================================= -->
+
+{% extends "base.html" %}
+
+{% block title %}401 - Accesso non autorizzato (Admin){% endblock %}
+
+{% block content %}
+<div class="fixed right-4 top-4 z-30">
+    {% include "components/theme_selector.html" %}
+</div>
+
+<section class="flex min-h-screen items-center justify-center px-4 py-12">
+    <div class="w-full max-w-3xl rounded-2xl border border-amber-200 bg-amber-50 p-8 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/20">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Area amministrazione
+        </p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+            Errore {{ codice_errore }}
+        </p>
+        <h1 class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {{ titolo_errore }}
+        </h1>
+        <p class="mt-3 text-sm text-gray-700 dark:text-gray-300">
+            {{ messaggio_errore }}
+        </p>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+            <a
+                href="{{ url_login }}"
+                class="inline-flex items-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+            >
+                <i class="ri-login-circle-line mr-2"></i>
+                Vai al login
+            </a>
+            <a
+                href="{{ url_dashboard_admin }}"
+                class="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+                <i class="ri-dashboard-line mr-2"></i>
+                Dashboard
+            </a>
+        </div>
+
+        <p class="mt-5 text-xs text-gray-500 dark:text-gray-400">
+            Percorso richiesto: {{ percorso_richiesto }}
+        </p>
+    </div>
+</section>
+{% endblock %}
