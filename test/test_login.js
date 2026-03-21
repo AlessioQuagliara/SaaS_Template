@@ -38,7 +38,7 @@ export default function () {
     `${BASE_URL}/auth/login`,
     {
       email: 'info@spotexsrl.it',         // Sostituisci con tue credenziali
-      password: 'latuapassword@',
+      password: 'WtQ5i8h20@',
       csrf_token: csrfToken,              // ← AGGIUNTO
       sessione_temp: sessioneTemp,        // ← AGGIUNTO
       next: '/',

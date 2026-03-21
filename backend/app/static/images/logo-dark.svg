@@ -1,43 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="4103" height="1220" viewBox="0 0 4103 1220">
   <defs>
-    <filter id="Rettangolo_4">
-      <feOffset dx="1" dy="1" input="SourceAlpha"/>
-      <feGaussianBlur stdDeviation="45" result="blur"/>
-      <feFlood flood-opacity="0.949" result="color"/>
-      <feComposite operator="out" in="SourceGraphic" in2="blur"/>
-      <feComposite operator="in" in="color"/>
-      <feComposite operator="in" in2="SourceGraphic"/>
+    <filter id="Tracciato_169" x="226.377" y="-279.535" width="3881.269" height="1560.449" filterUnits="userSpaceOnUse">
+      <feOffset dx="10" dy="10" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="35" result="blur"/>
+      <feFlood flood-color="#fbc531"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="Tracciato_167" x="244.363" y="141.743" width="3694.135" height="1017.84" filterUnits="userSpaceOnUse">
-      <feOffset dx="40" dy="40" input="SourceAlpha"/>
+    <filter id="Template" x="1506.776" y="164.25" width="2393" height="776" filterUnits="userSpaceOnUse">
+      <feOffset dx="10" dy="10" input="SourceAlpha"/>
       <feGaussianBlur stdDeviation="45" result="blur-2"/>
-      <feFlood flood-color="#ff0" flood-opacity="0.698"/>
+      <feFlood flood-opacity="0.58"/>
       <feComposite operator="in" in2="blur-2"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="SaaS_Template" x="335.776" y="166.25" width="3490" height="751" filterUnits="userSpaceOnUse">
-      <feOffset dx="1" dy="1" input="SourceAlpha"/>
-      <feGaussianBlur stdDeviation="45" result="blur-3"/>
-      <feFlood flood-color="#fff"/>
-      <feComposite operator="in" in2="blur-3"/>
-      <feComposite in="SourceGraphic"/>
-    </filter>
-    <clipPath id="clip-stretch-logo-std_1">
+    <clipPath id="clip-logo-dark">
       <rect width="4103" height="1220"/>
     </clipPath>
   </defs>
-  <g id="stretch-logo-std_1" data-name="stretch-logo-std – 1" clip-path="url(#clip-stretch-logo-std_1)">
-    <g data-type="innerShadowGroup">
-      <rect id="Rettangolo_4-2" data-name="Rettangolo 4" width="3630" height="895" rx="300" transform="translate(237 163)" fill="#333"/>
-      <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Rettangolo_4)">
-        <rect id="Rettangolo_4-3" data-name="Rettangolo 4" width="3630" height="895" rx="300" transform="translate(237 163)" fill="#fff"/>
-      </g>
+  <g id="logo-dark" clip-path="url(#clip-logo-dark)">
+    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Tracciato_169)">
+      <path id="Tracciato_169-2" data-name="Tracciato 169" d="M1095.219,0H608.736c-66.31,0-147.45,101-181.223,225.585L70.877,1541.266c-33.768,124.581-7.386,225.585,58.924,225.585H488.667L106.993,2370.284c-53.734,84.866-43.5,153.733,22.808,153.733H340.016L100.27,3483.84c-31.761,127.044-15.246,157.506,36.863,67.908l615.089-1058c52.06-89.6,41.949-164.883-22.691-168.08-64.582-3.2-116.978-5.894-116.978-5.894l404.2-808.339c48.9-97.806,34.793-174.476-31.517-171.246l-372.688,18.078L1131.749,188.3C1177.887,84.291,1161.528,0,1095.219,0Z" transform="translate(402.15 1221.95) rotate(-94)" fill="#ffeaa7"/>
     </g>
-    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Tracciato_167)">
-      <path id="Tracciato_167-2" data-name="Tracciato 167" d="M1466-3634.38l943.461-289.551-213.418,352.45,1453.068-352.45-639.729,510.8L4885.874-3832.52,2683.7-3203.3l325.682-368.182L1591.218-3322.524,2108.488-3716.1Z" transform="translate(-1124.44 4173.62)" fill="#fdffca" stroke="rgba(191,175,0,0.38)" stroke-width="15"/>
-    </g>
-    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#SaaS_Template)">
-      <text id="SaaS_Template-2" data-name="SaaS Template" transform="translate(2079.78 682.25)" fill="#333" stroke="#000" stroke-width="10" font-size="410" font-family="AndaleMono, Andale Mono"><tspan x="-1599.26" y="0">SaaS Template</tspan></text>
+    <text id="SaaS" transform="translate(996 702.5)" fill="#dfe6e9" stroke="#2d3436" stroke-width="10" font-size="410" font-family="RubikGlitch-Regular, Rubik Glitch"><tspan x="-540.79" y="0">SaaS</tspan></text>
+    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Template)">
+      <text id="Template-2" data-name="Template" transform="translate(2694.78 682.25)" fill="#2d3436" stroke="#2d3436" stroke-width="10" font-size="410" font-family="RubikGlitch-Regular, Rubik Glitch"><tspan x="-1006.55" y="0">Template</tspan></text>
     </g>
   </g>
 </svg>

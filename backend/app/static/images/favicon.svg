@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="641" height="641" viewBox="0 0 641 641">
+  <defs>
+    <filter id="Rettangolo_3">
+      <feOffset dx="40" dy="40" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="45" result="blur"/>
+      <feFlood result="color"/>
+      <feComposite operator="out" in="SourceGraphic" in2="blur"/>
+      <feComposite operator="in" in="color"/>
+      <feComposite operator="in" in2="SourceGraphic"/>
+    </filter>
+    <filter id="Tracciato_169" x="-95" y="34.106" width="851" height="492.285" filterUnits="userSpaceOnUse">
+      <feOffset dx="10" dy="10" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="35" result="blur-2"/>
+      <feFlood flood-color="#fbc531"/>
+      <feComposite operator="in" in2="blur-2"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="ST" x="-86.5" y="-21.5" width="896" height="764" filterUnits="userSpaceOnUse">
+      <feOffset dx="40" dy="40" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="45" result="blur-3"/>
+      <feFlood flood-opacity="0.576"/>
+      <feComposite operator="in" in2="blur-3"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <clipPath id="clip-favicon">
+      <rect width="641" height="641"/>
+    </clipPath>
+  </defs>
+  <g id="favicon" clip-path="url(#clip-favicon)">
+    <g data-type="innerShadowGroup">
+      <rect id="Rettangolo_3-2" data-name="Rettangolo 3" width="641" height="641" rx="141" fill="#333"/>
+      <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Rettangolo_3)">
+        <rect id="Rettangolo_3-3" data-name="Rettangolo 3" width="641" height="641" rx="141" fill="#fff"/>
+      </g>
+    </g>
+    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Tracciato_169)">
+      <path id="Tracciato_169-2" data-name="Tracciato 169" d="M322.386,0H197.746c-16.989,0-37.778,17.968-46.431,40.131L59.943,274.188c-8.651,22.163-1.892,40.131,15.1,40.131h91.944L69.2,421.669c-13.767,15.1-11.145,27.349,5.844,27.349H128.9L67.474,619.768c-8.137,22.6-3.906,28.02,9.444,12.081l157.59-188.216c13.338-15.939,10.748-29.332-5.814-29.9s-29.971-1.048-29.971-1.048l103.56-143.8c12.528-17.4,8.914-31.039-8.075-30.464l-95.485,3.216L331.746,33.5C343.567,15,339.375,0,322.386,0Z" transform="translate(0 467.57) rotate(-90)" fill="#ffeaa7"/>
+    </g>
+    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#ST)">
+      <text id="ST-2" data-name="ST" transform="translate(334.5 457.5)" fill="#fff" stroke="#2d3436" stroke-width="10" font-size="400" font-family="RubikGlitch-Regular, Rubik Glitch" opacity="0.747"><tspan x="-272.8" y="0">ST</tspan></text>
+    </g>
+  </g>
+</svg>

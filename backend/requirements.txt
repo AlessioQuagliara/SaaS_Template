@@ -18,3 +18,4 @@ redis
 itsdangerous
 slowapi
 resend
+stripe

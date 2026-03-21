@@ -8,36 +8,36 @@
       <feComposite operator="in" in="color"/>
       <feComposite operator="in" in2="SourceGraphic"/>
     </filter>
-    <filter id="Tracciato_167" x="151.677" y="963.851" width="2776.459" height="1151.72" filterUnits="userSpaceOnUse">
-      <feOffset dx="40" dy="40" input="SourceAlpha"/>
-      <feGaussianBlur stdDeviation="45" result="blur-2"/>
-      <feFlood flood-color="#ff0" flood-opacity="0.702"/>
+    <filter id="Tracciato_169" x="153.115" y="815" width="2711.885" height="1311.787" filterUnits="userSpaceOnUse">
+      <feOffset dx="10" dy="10" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="35" result="blur-2"/>
+      <feFlood flood-color="#fbc531"/>
       <feComposite operator="in" in2="blur-2"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <filter id="ST" x="774" y="813" width="1532" height="1455" filterUnits="userSpaceOnUse">
+    <filter id="ST" x="586" y="785" width="1842" height="1515" filterUnits="userSpaceOnUse">
       <feOffset dx="40" dy="40" input="SourceAlpha"/>
       <feGaussianBlur stdDeviation="45" result="blur-3"/>
       <feFlood flood-opacity="0.576"/>
       <feComposite operator="in" in2="blur-3"/>
       <feComposite in="SourceGraphic"/>
     </filter>
-    <clipPath id="clip-favicon_1">
+    <clipPath id="clip-mini-logo">
       <rect width="3000" height="3000"/>
     </clipPath>
   </defs>
-  <g id="favicon_1" data-name="favicon – 1" clip-path="url(#clip-favicon_1)">
+  <g id="mini-logo" clip-path="url(#clip-mini-logo)">
     <g data-type="innerShadowGroup">
-      <rect id="Rettangolo_3-2" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)" fill="#333"/>
+      <rect id="Rettangolo_3-2" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)" fill="#2d3436"/>
       <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Rettangolo_3)">
         <rect id="Rettangolo_3-3" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)" fill="#fff"/>
       </g>
     </g>
-    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Tracciato_167)">
-      <path id="Tracciato_167-2" data-name="Tracciato 167" d="M1466-3583l689.69-340.931L1999.677-3508.94,3061.9-3923.931,2594.245-3322.5,3966-3816.3,2356.164-3075.426l238.08-433.514L1557.537-3215.806l378.136-463.417Z" transform="translate(-1216 4999.68)" fill="#fdffca" stroke="rgba(191,175,0,0.38)" stroke-width="15"/>
+    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Tracciato_169)">
+      <path id="Tracciato_169-2" data-name="Tracciato 169" d="M1095.219,0H608.736c-66.31,0-147.45,70.132-181.223,156.636L70.877,1070.183c-33.768,86.5-7.386,156.636,58.924,156.636H488.667l-381.675,419c-53.734,58.927-43.5,106.745,22.808,106.745H340.016L100.27,2419.015c-31.761,88.213-15.246,109.365,36.863,47.152L752.222,1731.54c52.06-62.213,41.949-114.487-22.691-116.707-64.582-2.22-116.978-4.093-116.978-4.093l404.2-561.273c48.9-67.912,34.793-121.148-31.517-118.905L612.553,943.115l519.2-812.368C1177.887,58.527,1161.528,0,1095.219,0Z" transform="translate(248.12 2067.96) rotate(-90)" fill="#ffeaa7"/>
     </g>
     <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#ST)">
-      <text id="ST-2" data-name="ST" transform="translate(1500 1845)" fill="#fff" stroke="#fff" stroke-width="30" font-size="1000" font-family="AndaleMono, Andale Mono"><tspan x="-600.098" y="0">ST</tspan></text>
+      <text id="ST-2" data-name="ST" transform="translate(1500 1845)" fill="#dfe6e9" stroke="#2d3436" stroke-width="30" font-size="1000" font-family="RubikGlitch-Regular, Rubik Glitch"><tspan x="-682" y="0">ST</tspan></text>
     </g>
   </g>
 </svg>
