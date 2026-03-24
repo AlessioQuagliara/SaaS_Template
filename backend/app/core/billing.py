@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from datetime import datetime, timedelta, timezone
 
 from typing import Any
@@ -25,6 +27,8 @@ from app.models import (
     Utente,
     UtenteRuoloTenant,
 )
+
+logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------
 # LIMITI PER PIANO ------------------------------------------------------------
@@ -335,6 +339,16 @@ async def sincronizza_sottoscrizione_tenant_live(
         return tenant_obj.sottoscrizione, False, verifica_live_ok
 
     try:
+        invoice_paid_flag = invoice_pagata_da_subscription_obj(sub_obj)
+        current_period_end_unix = estrai_current_period_end_unix_da_subscription(sub_obj)
+        logger.warning(
+            "SYNC_LIVE_STRIPE tenant_id=%s sub_id=%s status=%s invoice_paid=%s current_period_end=%s",
+            tenant_id,
+            sub_obj.get("id"),
+            sub_obj.get("status"),
+            invoice_paid_flag,
+            current_period_end_unix,
+        )
         await sincronizza_sottoscrizione_da_stripe(
             db,
             tenant_id=tenant_id,
@@ -342,10 +356,10 @@ async def sincronizza_sottoscrizione_tenant_live(
             stripe_customer_id=str(sub_obj.get("customer")),
             stripe_status=stato_stripe_effettivo(
                 str(sub_obj.get("status") or ""),
-                invoice_paid=invoice_pagata_da_subscription_obj(sub_obj),
+                invoice_paid=invoice_paid_flag,
             ),
             stripe_price_id=_estrai_price_id_da_subscription(sub_obj),
-            current_period_end_unix=estrai_current_period_end_unix_da_subscription(sub_obj),
+            current_period_end_unix=current_period_end_unix,
         )
         await db.commit()
         cancel_at_period_end = bool(sub_obj.get("cancel_at_period_end"))
@@ -582,6 +596,14 @@ async def sincronizza_sottoscrizione_da_stripe(
     stato = stato_interno_da_stato_stripe(stripe_status)
     fine_periodo = datetime_da_unix(current_period_end_unix)
     fallback_grace_deadline: datetime | None = None
+    logger.warning(
+        "SYNC_LOCAL_BEFORE tenant_id=%s stripe_status=%s stato_interno=%s fine_periodo=%s row_esistente=%s",
+        tenant_id,
+        stripe_status,
+        stato,
+        fine_periodo,
+        bool(row),
+    )
 
     if row is None:
         if tenant_id is None:
@@ -603,16 +625,13 @@ async def sincronizza_sottoscrizione_da_stripe(
         fine_periodo_utc = (
             fine_periodo if fine_periodo.tzinfo else fine_periodo.replace(tzinfo=timezone.utc)
         )
-        if (
-            fine_periodo_utc <= adesso_utc
-            and stato in {SottoscrizioniStati.ATTIVO, SottoscrizioniStati.PROVA}
-        ):
-            # Fallback locale: periodo concluso ma nessun rinnovo valido.
+        if fine_periodo_utc <= adesso_utc:
+            # Trial realmente concluso: scade lato interno.
             if stato == SottoscrizioniStati.PROVA:
                 stato = SottoscrizioniStati.SCADUTO
-            else:
-                stato = SottoscrizioniStati.SOSPESO
-                fallback_grace_deadline = _calcola_scadenza_tregua(adesso_utc)
+            # Per ATTIVO ci fidiamo del risultato Stripe gia' normalizzato
+            # (stato_stripe_effettivo): non forziamo una sospensione locale
+            # solo per current_period_end nel passato.
 
     if stato == SottoscrizioniStati.SOSPESO:
         fine_corrente_utc = _normalizza_data_utc(row.fine_periodo_corrente)
@@ -643,4 +662,10 @@ async def sincronizza_sottoscrizione_da_stripe(
     if stripe_subscription_id:
         row.id_stripe_sottoscrizione = stripe_subscription_id
     await db.flush()
+    logger.warning(
+        "SYNC_LOCAL_AFTER tenant_id=%s stato_piano=%s fine_periodo_corrente=%s",
+        row.tenant_id,
+        row.stato_piano,
+        row.fine_periodo_corrente,
+    )
     return row

@@ -44,8 +44,8 @@ def tenant_ha_accesso(
     Regole:
     - sottoscrizione assente -> NO
     - stati consentiti: PROVA e ATTIVO
-    - se `fine_periodo_corrente` e' valorizzata deve essere nel futuro
-    - `PROVA` senza scadenza -> NO (configurazione incompleta)
+    - ATTIVO -> accesso sempre consentito (source of truth: stato Stripe sincronizzato)
+    - PROVA -> accesso consentito solo se `fine_periodo_corrente` e' nel futuro
     """
     sottoscrizione = tenant.sottoscrizione
     if sottoscrizione is None:
@@ -55,9 +55,12 @@ def tenant_ha_accesso(
     if stato not in {SottoscrizioniStati.PROVA, SottoscrizioniStati.ATTIVO}:
         return False
 
+    if stato == SottoscrizioniStati.ATTIVO:
+        return True
+
     fine_periodo = sottoscrizione.fine_periodo_corrente
     if fine_periodo is None:
-        return stato == SottoscrizioniStati.ATTIVO
+        return False
 
     adesso_utc = _normalizza_data_utc(adesso) or datetime.now(timezone.utc)
     fine_periodo_utc = _normalizza_data_utc(fine_periodo) or datetime.now(timezone.utc)
