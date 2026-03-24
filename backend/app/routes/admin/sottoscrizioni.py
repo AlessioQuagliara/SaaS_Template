@@ -237,7 +237,14 @@ async def sottoscrizioni_page(
     stato_piano = sottoscrizione.stato_piano.value if sottoscrizione else None
     piano = sottoscrizione.piano.value if sottoscrizione else None
     fine_periodo = sottoscrizione.fine_periodo_corrente if sottoscrizione else None
-    giorni_rimanenti = _giorni_rimanenti(fine_periodo)  # ty:ignore[invalid-argument-type]
+    giorni_rimanenti_raw = _giorni_rimanenti(fine_periodo)  # ty:ignore[invalid-argument-type]
+    periodo_in_aggiornamento = bool(
+        stato_piano == "attivo"
+        and fine_periodo is not None
+        and giorni_rimanenti_raw == 0
+        and not cancel_at_period_end
+    )
+    giorni_rimanenti = None if periodo_in_aggiornamento else giorni_rimanenti_raw
 
     return templates.TemplateResponse(
         request,
@@ -251,6 +258,7 @@ async def sottoscrizioni_page(
             "piano": piano,
             "fine_periodo": fine_periodo,
             "giorni_rimanenti": giorni_rimanenti,
+            "periodo_in_aggiornamento": periodo_in_aggiornamento,
             "is_trial": stato_piano == "prova",
             "is_attivo": stato_piano == "attivo",
             "is_sospeso": stato_piano == "sospeso",

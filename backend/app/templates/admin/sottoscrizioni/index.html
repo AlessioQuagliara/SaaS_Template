@@ -84,7 +84,9 @@
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60">
             <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Fine periodo corrente</dt>
             <dd class="mt-1 text-base font-semibold text-gray-900 dark:text-white">
-              {% if fine_periodo %}
+              {% if periodo_in_aggiornamento %}
+                In sincronizzazione con Stripe
+              {% elif fine_periodo %}
                 {{ fine_periodo.strftime("%d/%m/%Y %H:%M") }}
               {% else %}
                 Non impostata
@@ -94,7 +96,9 @@
           <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60">
             <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Giorni rimanenti</dt>
             <dd class="mt-1 text-base font-semibold text-gray-900 dark:text-white">
-              {% if giorni_rimanenti is not none %}
+              {% if periodo_in_aggiornamento %}
+                In aggiornamento
+              {% elif giorni_rimanenti is not none %}
                 {{ giorni_rimanenti }}
               {% else %}
                 N/D
@@ -135,7 +139,12 @@
         {% elif is_attivo %}
           <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800 dark:border-emerald-700/40 dark:bg-emerald-900/20 dark:text-emerald-200">
             <p class="text-sm font-medium">Piano attivo</p>
-            <p class="mt-1 text-xs">Il tenant è operativo e con accesso regolare.</p>
+            <p class="mt-1 text-xs">
+              Il tenant è operativo e con accesso regolare.
+              {% if periodo_in_aggiornamento %}
+                Dettagli periodo in sincronizzazione.
+              {% endif %}
+            </p>
           </div>
         {% endif %}
 
