@@ -37,8 +37,8 @@ export default function () {
   const loginRes = http.post(
     `${BASE_URL}/auth/login`,
     {
-      email: 'info@spotexsrl.it',         // Sostituisci con tue credenziali
-      password: 'WtQ5i8h20@',
+      email: 'info@azienda.it',         // Sostituisci con tue credenziali
+      password: 'password',
       csrf_token: csrfToken,              // ← AGGIUNTO
       sessione_temp: sessioneTemp,        // ← AGGIUNTO
       next: '/',
