@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 130" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">TenantHawk logo</title>
+  <desc id="desc">Logo for TenantHawk, a fast multi-tenant SaaS platform, with a stylized hawk icon and bold wordmark.</desc>
+
+  <defs>
+    <linearGradient id="th-yellow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE866" />
+      <stop offset="55%" stop-color="#FFD84D" />
+      <stop offset="100%" stop-color="#FFB800" />
+    </linearGradient>
+
+    <linearGradient id="th-dark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1C2233" />
+      <stop offset="100%" stop-color="#0D111A" />
+    </linearGradient>
+
+    <filter id="th-soft-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feColorMatrix
+        in="blur"
+        type="matrix"
+        values="1 0 0 0 0
+                0 0.85 0 0 0
+                0 0.2 0 0 0
+                0 0 0 0.22 0"
+        result="glow"
+      />
+      <feMerge>
+        <feMergeNode in="glow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="th-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.28" />
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="460" height="130" rx="18" fill="#090C12" />
+
+  <!-- icon -->
+  <g transform="translate(26 20)" filter="url(#th-shadow)">
+    <circle cx="42" cy="42" r="34" fill="url(#th-yellow)" opacity="0.12" filter="url(#th-soft-glow)" />
+
+    <!-- outer shield -->
+    <path
+      d="M42 6
+         L70 18
+         L70 46
+         C70 64 58 77 42 86
+         C26 77 14 64 14 46
+         L14 18
+         Z"
+      fill="url(#th-dark)"
+      stroke="url(#th-yellow)"
+      stroke-width="2.5"
+      stroke-linejoin="round"
+    />
+
+    <!-- hawk head / wing slash -->
+    <path
+      d="M28 51
+         L42 20
+         L56 29
+         L48 42
+         L60 42
+         L40 65
+         L46 49
+         Z"
+      fill="url(#th-yellow)"
+    />
+
+    <!-- beak -->
+    <path
+      d="M56 29
+         L66 26
+         L58 35
+         Z"
+      fill="#FFE866"
+    />
+
+    <!-- eye -->
+    <circle cx="47" cy="33" r="2.4" fill="#0A0D14" />
+    <circle cx="47.8" cy="32.2" r="0.7" fill="#FFF8D6" />
+
+    <!-- speed accents -->
+    <path d="M7 33 L0 30 L5 36" stroke="#FFD84D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />
+    <path d="M9 47 L1 47" stroke="#FFD84D" stroke-width="2" stroke-linecap="round" opacity="0.75" />
+    <path d="M77 36 L84 33 L79 39" stroke="#FFD84D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />
+
+    <!-- bottom spark -->
+    <path
+      d="M42 87
+         L37 96
+         L43 96
+         L39 104"
+      stroke="url(#th-yellow)"
+      stroke-width="2.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+
+  <!-- wordmark -->
+  <g transform="translate(122 50)">
+    <text
+      x="0"
+      y="0"
+      font-family="Inter, Segoe UI, Arial, sans-serif"
+      font-size="42"
+      font-weight="800"
+      letter-spacing="-1.4"
+      fill="#F4F7FB"
+    >
+      Tenant
+    </text>
+
+    <text
+      x="154"
+      y="0"
+      font-family="Inter, Segoe UI, Arial, sans-serif"
+      font-size="42"
+      font-weight="900"
+      letter-spacing="-1.2"
+      fill="url(#th-yellow)"
+    >
+      Hawk
+    </text>
+
+    <text
+      x="1"
+      y="28"
+      font-family="Inter, Segoe UI, Arial, sans-serif"
+      font-size="11"
+      font-weight="600"
+      letter-spacing="2.1"
+      fill="#B8C2D6"
+      opacity="0.9"
+    >
+      FAST MULTI-TENANT SOFTWARE
+    </text>
+  </g>
+
+  <!-- subtle baseline -->
+  <path
+    d="M123 94 C170 94, 205 88, 245 94 S320 100, 390 94"
+    stroke="url(#th-yellow)"
+    stroke-width="1.5"
+    opacity="0.25"
+    fill="none"
+    stroke-linecap="round"
+  />
+</svg>

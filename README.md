@@ -1,8 +1,8 @@
 [![GitHub Repo](https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/user/repo) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white) ![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white) ![n8n](https://img.shields.io/badge/n8n-1EC19A?style=for-the-badge&logo=n8n&logoColor=white) ![Traefik](https://img.shields.io/badge/Traefik-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white) ![LiteLLM](https://img.shields.io/badge/LiteLLM-4B32C3?style=for-the-badge&logo=python&logoColor=white) ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ****
-![Logo](/img/logo.gif)
+![Logo](/img/logo.svg)
 ****
-# TenantHawk - TenantHawk v1.0.0
+# TenantHawk - SaaS Template v1.0.0
 Costruisci SaaS multi-tenant production-ready senza impazzire tra frontend e backend separati.
 
 Backend + Admin + Infra già pronti: parti subito, non tra 3 settimane.
