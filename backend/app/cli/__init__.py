@@ -6,5 +6,5 @@ from __future__ import annotations
 
 import typer
 
-app = typer.Typer(help="CLI per il SaaS template (backend).")
+app = typer.Typer(help="CLI per il TenantHawk (backend).")
 

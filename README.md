@@ -2,7 +2,7 @@
 ****
 ![Logo](/img/logo.gif)
 ****
-# SaaS Template v0.1
+# TenantHawk - TenantHawk v1.0.0
 Costruisci SaaS multi-tenant production-ready senza impazzire tra frontend e backend separati.
 
 Backend + Admin + Infra già pronti: parti subito, non tra 3 settimane.

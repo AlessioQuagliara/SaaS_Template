@@ -74,7 +74,7 @@ create_app() è “la fabbrica” che monta l’app completa ===================
 
 def create_app() -> FastAPI:
         app = FastAPI(
-                title="SaaS_Template",
+                title="TenantHawk - SaaS Template",
                 version="0.1.0",
                 lifespan=lifespan,
                 docs_url="/docs",

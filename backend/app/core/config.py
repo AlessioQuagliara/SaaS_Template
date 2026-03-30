@@ -36,8 +36,8 @@ class Settings(BaseSettings):
 
     # Importo la chiave di Resend + Email
     resend_api_key: str = "re_chiave_presa_da_resend.com"
-    reset_email_from: str = "SaaS Template <no-reply@linkbay-cms.com>"
-    resend_dev_fallback_from: str = "SaaS Template <onboarding@resend.dev>"
+    reset_email_from: str = "TenantHawk <no-reply@linkbay-cms.com>"
+    resend_dev_fallback_from: str = "TenantHawk <onboarding@resend.dev>"
     app_base_url: str = "http://admin.localhost:8000"
     frontend_base_url: str = "http://www.localhost:3000"
 
