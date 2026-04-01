@@ -1,43 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3000" height="3000" viewBox="0 0 3000 3000">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <filter id="Rettangolo_3">
-      <feOffset dx="1" dy="1" input="SourceAlpha"/>
-      <feGaussianBlur stdDeviation="45" result="blur"/>
-      <feFlood flood-opacity="0.502" result="color"/>
-      <feComposite operator="out" in="SourceGraphic" in2="blur"/>
-      <feComposite operator="in" in="color"/>
-      <feComposite operator="in" in2="SourceGraphic"/>
-    </filter>
-    <filter id="Tracciato_169" x="153.115" y="815" width="2711.885" height="1311.787" filterUnits="userSpaceOnUse">
-      <feOffset dx="10" dy="10" input="SourceAlpha"/>
-      <feGaussianBlur stdDeviation="35" result="blur-2"/>
-      <feFlood flood-color="#fbc531"/>
-      <feComposite operator="in" in2="blur-2"/>
-      <feComposite in="SourceGraphic"/>
-    </filter>
-    <filter id="ST" x="556" y="755" width="1842" height="1515" filterUnits="userSpaceOnUse">
-      <feOffset dx="10" dy="10" input="SourceAlpha"/>
-      <feGaussianBlur stdDeviation="45" result="blur-3"/>
-      <feFlood flood-opacity="0.576"/>
-      <feComposite operator="in" in2="blur-3"/>
-      <feComposite in="SourceGraphic"/>
-    </filter>
-    <clipPath id="clip-mini-logo-white">
-      <rect width="3000" height="3000"/>
-    </clipPath>
+    <linearGradient id="fav-yellow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE866" />
+      <stop offset="55%" stop-color="#FFD84D" />
+      <stop offset="100%" stop-color="#FFB800" />
+    </linearGradient>
+    <linearGradient id="fav-dark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1C2233" />
+      <stop offset="100%" stop-color="#d7d7d7" />
+    </linearGradient>
   </defs>
-  <g id="mini-logo-white" clip-path="url(#clip-mini-logo-white)">
-    <g data-type="innerShadowGroup">
-      <rect id="Rettangolo_3-2" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)" fill="#dfe6e9"/>
-      <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Rettangolo_3)">
-        <rect id="Rettangolo_3-3" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)" fill="#fff"/>
-      </g>
-    </g>
-    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#Tracciato_169)">
-      <path id="Tracciato_169-2" data-name="Tracciato 169" d="M1095.219,0H608.736c-66.31,0-147.45,70.132-181.223,156.636L70.877,1070.183c-33.768,86.5-7.386,156.636,58.924,156.636H488.667l-381.675,419c-53.734,58.927-43.5,106.745,22.808,106.745H340.016L100.27,2419.015c-31.761,88.213-15.246,109.365,36.863,47.152L752.222,1731.54c52.06-62.213,41.949-114.487-22.691-116.707-64.582-2.22-116.978-4.093-116.978-4.093l404.2-561.273c48.9-67.912,34.793-121.148-31.517-118.905L612.553,943.115l519.2-812.368C1177.887,58.527,1161.528,0,1095.219,0Z" transform="translate(248.12 2067.96) rotate(-90)" fill="#ffeaa7"/>
-    </g>
-    <g transform="matrix(1, 0, 0, 1, 0, 0)" filter="url(#ST)">
-      <text id="ST-2" data-name="ST" transform="translate(1500 1845)" fill="#2d3436" stroke="#dfe6e9" stroke-width="30" font-size="1000" font-family="RubikGlitch-Regular, Rubik Glitch"><tspan x="-682" y="0">ST</tspan></text>
-    </g>
-  </g>
+
+  <path
+    d="M32 5 L52 14 L52 34 C52 47 43.5 56.2 32 62 C20.5 56.2 12 47 12 34 L12 14 Z"
+    fill="url(#fav-dark)"
+    stroke="url(#fav-yellow)"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+
+  <path d="M22 37 L32 15 L42 22 L36 32 L44 32 L30 48 L34 36 Z" fill="url(#fav-yellow)" />
+  <path d="M42 22 L49 20 L43 26 Z" fill="#FFE866" />
+  <circle cx="35.3" cy="24.8" r="1.7" fill="#0A0D14" />
 </svg>

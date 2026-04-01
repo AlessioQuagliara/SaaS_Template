@@ -41,6 +41,42 @@ logger = logging.getLogger(__name__)
 stripe.api_key = settings.stripe_secret_key
 
 
+def _stripe_obj_to_dict(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+
+    for method_name in ("to_dict_recursive", "to_dict", "serialize", "_to_dict_recursive"):
+        method = getattr(value, method_name, None)
+        if callable(method):
+            try:
+                converted = method()
+            except Exception:
+                continue
+            if isinstance(converted, dict):
+                return converted
+
+    raw_data = getattr(value, "_data", None)
+    if isinstance(raw_data, dict):
+        return raw_data
+
+    try:
+        converted = dict(value)
+    except Exception:
+        return {}
+    return converted if isinstance(converted, dict) else {}
+
+
+def _clean_stripe_id(value: Any) -> str | None:
+    if value is None:
+        return None
+    value_str = str(value).strip()
+    if not value_str:
+        return None
+    if value_str.lower() in {"none", "null", "undefined"}:
+        return None
+    return value_str
+
+
 def _to_int(value: Any) -> int | None:
     if value is None:
         return None
@@ -50,22 +86,25 @@ def _to_int(value: Any) -> int | None:
         return None
 
 
-def _price_id_from_subscription_obj(subscription_obj: dict[str, Any]) -> str | None:
-    items = (subscription_obj.get("items") or {}).get("data") or []
+def _price_id_from_subscription_obj(subscription_obj: Any) -> str | None:
+    subscription_data = _stripe_obj_to_dict(subscription_obj)
+    items = (_stripe_obj_to_dict(subscription_data.get("items")).get("data")) or []
     if not items:
         return None
-    price_obj = items[0].get("price") or {}
+    price_obj = _stripe_obj_to_dict(_stripe_obj_to_dict(items[0]).get("price"))
     price_id = price_obj.get("id")
     return str(price_id) if price_id else None
 
 
-def _tenant_id_from_subscription_obj(subscription_obj: dict[str, Any]) -> int | None:
-    metadata = subscription_obj.get("metadata") or {}
+def _tenant_id_from_subscription_obj(subscription_obj: Any) -> int | None:
+    subscription_data = _stripe_obj_to_dict(subscription_obj)
+    metadata = _stripe_obj_to_dict(subscription_data.get("metadata"))
     return _to_int(metadata.get("tenant_id"))
 
 
-def _payment_status_da_subscription_obj(subscription_obj: dict[str, Any]) -> str | None:
-    stato_subscription = str(subscription_obj.get("status") or "").strip().lower()
+def _payment_status_da_subscription_obj(subscription_obj: Any) -> str | None:
+    subscription_data = _stripe_obj_to_dict(subscription_obj)
+    stato_subscription = str(subscription_data.get("status") or "").strip().lower()
     if stato_subscription in {"active", "trialing"}:
         return "paid"
     if invoice_pagata_da_subscription_obj(subscription_obj):
@@ -76,33 +115,26 @@ def _payment_status_da_subscription_obj(subscription_obj: dict[str, Any]) -> str
 async def _sync_from_subscription(
     db: AsyncSession,
     *,
-    subscription_obj: dict[str, Any],
+    subscription_obj: Any,
     tenant_id: int | None = None,
     status_override: str | None = None,
     payment_status: str | None = None,
     invoice_paid: bool = False,
 ) -> Sottoscrizione | None:
+    subscription_data = _stripe_obj_to_dict(subscription_obj)
     return await sincronizza_sottoscrizione_da_stripe(
         db,
         tenant_id=tenant_id,
-        stripe_subscription_id=(
-            str(subscription_obj.get("id"))
-            if subscription_obj.get("id")
-            else None
-        ),
-        stripe_customer_id=(
-            str(subscription_obj.get("customer"))
-            if subscription_obj.get("customer")
-            else None
-        ),
+        stripe_subscription_id=_clean_stripe_id(subscription_data.get("id")),
+        stripe_customer_id=_clean_stripe_id(subscription_data.get("customer")),
         stripe_status=stato_stripe_effettivo(
-            status_override or str(subscription_obj.get("status") or ""),
+            status_override or str(subscription_data.get("status") or ""),
             payment_status=payment_status,
             invoice_paid=invoice_paid,
         ),
-        stripe_price_id=_price_id_from_subscription_obj(subscription_obj),
+        stripe_price_id=_price_id_from_subscription_obj(subscription_data),
         current_period_end_unix=estrai_current_period_end_unix_da_subscription(
-            subscription_obj
+            subscription_data
         ),
     )
 
@@ -125,6 +157,7 @@ async def _sync_from_subscription_id(
             "latest_invoice.payment_intent",
         ],
     )
+    subscription_obj = _stripe_obj_to_dict(subscription_obj)
     payment_status_effettivo = payment_status or _payment_status_da_subscription_obj(
         subscription_obj
     )
@@ -151,12 +184,13 @@ async def _sync_from_invoice_id(
     invoice_paid: bool = False,
 ) -> Sottoscrizione | None:
     invoice_obj = stripe.Invoice.retrieve(invoice_id)
-    subscription_id = invoice_obj.get("subscription")
+    invoice_obj = _stripe_obj_to_dict(invoice_obj)
+    subscription_id = _clean_stripe_id(invoice_obj.get("subscription"))
     if not subscription_id:
         return None
     return await _sync_from_subscription_id(
         db,
-        subscription_id=str(subscription_id),
+        subscription_id=subscription_id,
         status_override=status_override,
         payment_status=payment_status,
         invoice_paid=invoice_paid,
@@ -195,8 +229,9 @@ async def _destinatari_notifica_tenant(
 def _descrivi_operazione_evento(
     event_type: str,
     *,
-    data_obj: dict[str, Any],
+    data_obj: Any,
 ) -> tuple[str | None, str | None]:
+    data = _stripe_obj_to_dict(data_obj)
     if event_type in {"checkout.session.completed", "checkout.session.async_payment_succeeded"}:
         return (
             "Checkout completato",
@@ -207,7 +242,7 @@ def _descrivi_operazione_evento(
     if event_type == "customer.subscription.deleted":
         return "Sottoscrizione cancellata", "La sottoscrizione risulta terminata su Stripe."
     if event_type == "customer.subscription.updated":
-        if bool(data_obj.get("cancel_at_period_end")):
+        if bool(data.get("cancel_at_period_end")):
             return (
                 "Annullamento a fine periodo impostato",
                 "Il rinnovo automatico e' disattivato: il piano termina a fine periodo.",
@@ -323,9 +358,11 @@ async def stripe_webhook(
         logger.warning("Stripe webhook firma non valida: %s", exc)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Firma webhook non valida") from exc
 
-    event_type = str(event.get("type"))
-    data_obj = event.get("data", {}).get("object", {})
-    logger.info("Stripe webhook ricevuto: event=%s id=%s", event_type, event.get("id"))
+    event_data = _stripe_obj_to_dict(event)
+    event_type = str(event_data.get("type") or "")
+    event_payload = _stripe_obj_to_dict(event_data.get("data"))
+    data_obj = _stripe_obj_to_dict(event_payload.get("object"))
+    logger.info("Stripe webhook ricevuto: event=%s id=%s", event_type, event_data.get("id"))
 
     try:
         sincronizzato = False
@@ -333,14 +370,22 @@ async def stripe_webhook(
         snapshot_notifica: dict[str, Any] | None = None
         if event_type in {"checkout.session.completed", "checkout.session.async_payment_succeeded"}:
             if data_obj.get("mode") == "subscription" and data_obj.get("subscription"):
-                metadata = data_obj.get("metadata") or {}
+                metadata = _stripe_obj_to_dict(data_obj.get("metadata"))
                 tenant_id = _to_int(metadata.get("tenant_id"))
                 status_override = None
                 if str(data_obj.get("payment_status") or "").lower() == "paid":
                     status_override = "active"
+                subscription_id = _clean_stripe_id(data_obj.get("subscription"))
+                if not subscription_id:
+                    logger.warning(
+                        "Webhook %s senza subscription id valido",
+                        event_type,
+                    )
+                    await db.commit()
+                    return {"received": True}
                 sottoscrizione_sincronizzata = await _sync_from_subscription_id(
                     db,
-                    subscription_id=str(data_obj.get("subscription")),
+                    subscription_id=subscription_id,
                     tenant_id=tenant_id,
                     status_override=status_override,
                     payment_status=str(data_obj.get("payment_status") or ""),
@@ -350,11 +395,19 @@ async def stripe_webhook(
 
         elif event_type == "checkout.session.async_payment_failed":
             if data_obj.get("mode") == "subscription" and data_obj.get("subscription"):
-                metadata = data_obj.get("metadata") or {}
+                metadata = _stripe_obj_to_dict(data_obj.get("metadata"))
                 tenant_id = _to_int(metadata.get("tenant_id"))
+                subscription_id = _clean_stripe_id(data_obj.get("subscription"))
+                if not subscription_id:
+                    logger.warning(
+                        "Webhook %s senza subscription id valido",
+                        event_type,
+                    )
+                    await db.commit()
+                    return {"received": True}
                 sottoscrizione_sincronizzata = await _sync_from_subscription_id(
                     db,
-                    subscription_id=str(data_obj.get("subscription")),
+                    subscription_id=subscription_id,
                     tenant_id=tenant_id,
                     status_override="past_due",
                 )
@@ -368,9 +421,9 @@ async def stripe_webhook(
             "customer.subscription.paused",
             "customer.subscription.resumed",
         }:
-            metadata = data_obj.get("metadata") or {}
+            metadata = _stripe_obj_to_dict(data_obj.get("metadata"))
             tenant_id = _to_int(metadata.get("tenant_id"))
-            subscription_id = str(data_obj.get("id") or "")
+            subscription_id = _clean_stripe_id(data_obj.get("id")) or ""
             if not subscription_id:
                 logger.warning(
                     "Webhook %s senza subscription id: impossibile sync affidabile da payload",
@@ -388,11 +441,11 @@ async def stripe_webhook(
                 sincronizzato = True
 
         elif event_type in {"invoice.paid", "invoice.payment_succeeded"}:
-            subscription_id = data_obj.get("subscription")
+            subscription_id = _clean_stripe_id(data_obj.get("subscription"))
             if subscription_id:
                 sottoscrizione_sincronizzata = await _sync_from_subscription_id(
                     db,
-                    subscription_id=str(subscription_id),
+                    subscription_id=subscription_id,
                     payment_status=str(data_obj.get("payment_status") or ""),
                     invoice_paid=True,
                 )
@@ -400,11 +453,11 @@ async def stripe_webhook(
                 sincronizzato = True
 
         elif event_type == "invoice.payment_failed":
-            subscription_id = data_obj.get("subscription")
+            subscription_id = _clean_stripe_id(data_obj.get("subscription"))
             if subscription_id:
                 sottoscrizione_sincronizzata = await _sync_from_subscription_id(
                     db,
-                    subscription_id=str(subscription_id),
+                    subscription_id=subscription_id,
                     status_override="past_due",
                     payment_status=str(data_obj.get("payment_status") or ""),
                 )
@@ -412,11 +465,11 @@ async def stripe_webhook(
                 sincronizzato = True
 
         elif event_type == "payment_intent.succeeded":
-            invoice_id = data_obj.get("invoice")
+            invoice_id = _clean_stripe_id(data_obj.get("invoice"))
             if invoice_id:
                 sottoscrizione_sincronizzata = await _sync_from_invoice_id(
                     db,
-                    invoice_id=str(invoice_id),
+                    invoice_id=invoice_id,
                     payment_status="paid",
                     invoice_paid=True,
                 )
@@ -424,11 +477,11 @@ async def stripe_webhook(
                 sincronizzato = True
 
         elif event_type in {"charge.succeeded", "charge.updated"}:
-            invoice_id = data_obj.get("invoice")
+            invoice_id = _clean_stripe_id(data_obj.get("invoice"))
             if invoice_id:
                 sottoscrizione_sincronizzata = await _sync_from_invoice_id(
                     db,
-                    invoice_id=str(invoice_id),
+                    invoice_id=invoice_id,
                     payment_status="paid",
                     invoice_paid=True,
                 )

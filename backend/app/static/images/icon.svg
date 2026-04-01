@@ -1,12 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3000" height="3000" viewBox="0 0 3000 3000">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <clipPath id="clip-favicon_1">
-      <rect width="3000" height="3000"/>
-    </clipPath>
+    <linearGradient id="fav-yellow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE866" />
+      <stop offset="55%" stop-color="#FFD84D" />
+      <stop offset="100%" stop-color="#FFB800" />
+    </linearGradient>
+    <linearGradient id="fav-dark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1C2233" />
+      <stop offset="100%" stop-color="#0D111A" />
+    </linearGradient>
   </defs>
-  <g id="favicon_1" data-name="favicon – 1" clip-path="url(#clip-favicon_1)">
-    <rect id="Rettangolo_3" data-name="Rettangolo 3" width="2500" height="2500" rx="600" transform="translate(250 250)"/>
-    <path id="Tracciato_167" data-name="Tracciato 167" d="M1466-3583l689.69-340.931L1999.677-3508.94,3061.9-3923.931,2594.245-3322.5,3966-3816.3,2356.164-3075.426l238.081-433.514L1557.537-3215.806l378.136-463.417Z" transform="translate(-1216 5138.426)" fill="#f5ff05" opacity="0.5"/>
-    <text id="ST" transform="translate(1500 1845)" fill="#fff" font-size="1000" font-family="AndaleMono, Andale Mono"><tspan x="-600.098" y="0">ST</tspan></text>
-  </g>
+
+  <path
+    d="M32 5 L52 14 L52 34 C52 47 43.5 56.2 32 62 C20.5 56.2 12 47 12 34 L12 14 Z"
+    fill="url(#fav-dark)"
+    stroke="url(#fav-yellow)"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+
+  <path d="M22 37 L32 15 L42 22 L36 32 L44 32 L30 48 L34 36 Z" fill="url(#fav-yellow)" />
+  <path d="M42 22 L49 20 L43 26 Z" fill="#FFE866" />
+  <circle cx="35.3" cy="24.8" r="1.7" fill="#0A0D14" />
 </svg>

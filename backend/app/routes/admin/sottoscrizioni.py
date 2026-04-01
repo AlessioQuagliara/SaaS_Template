@@ -4,9 +4,13 @@
 
 from __future__ import annotations
 
+import logging
+
 import math
 
 from datetime import datetime, timezone
+
+from typing import Any
 
 from urllib.parse import quote_plus
 
@@ -45,12 +49,49 @@ from app.core.tenancy import prendi_tenant_corrente
 from app.models import Sottoscrizioni, Tenant, Utente, UtenteRuolo
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.stripe_secret_key
 
 # -----------------------------------------------------------------------------
 # NORMALIZZATORI --------------------------------------------------------------
 # -----------------------------------------------------------------------------
+
+def _stripe_obj_to_dict(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+
+    for method_name in ("to_dict_recursive", "to_dict", "serialize", "_to_dict_recursive"):
+        method = getattr(value, method_name, None)
+        if callable(method):
+            try:
+                converted = method()
+            except Exception:
+                continue
+            if isinstance(converted, dict):
+                return converted
+
+    raw_data = getattr(value, "_data", None)
+    if isinstance(raw_data, dict):
+        return raw_data
+
+    try:
+        converted = dict(value)
+    except Exception:
+        return {}
+    return converted if isinstance(converted, dict) else {}
+
+
+def _clean_stripe_id(value: Any) -> str | None:
+    if value is None:
+        return None
+    value_str = str(value).strip()
+    if not value_str:
+        return None
+    if value_str.lower() in {"none", "null", "undefined"}:
+        return None
+    return value_str
+
 
 def _normalizza_data_utc(data: datetime) -> datetime:
     if data.tzinfo is None:
@@ -106,18 +147,21 @@ def _redirect_gestisci(
 
 
 def _estrai_price_id_da_subscription(subscription_obj: dict) -> str | None:
-    items = (subscription_obj.get("items") or {}).get("data") or []
+    subscription_data = _stripe_obj_to_dict(subscription_obj)
+    items = (_stripe_obj_to_dict(subscription_data.get("items")).get("data")) or []
     if not items:
         return None
-    price_obj = items[0].get("price") or {}
+    first_item = _stripe_obj_to_dict(items[0])
+    price_obj = _stripe_obj_to_dict(first_item.get("price"))
     return str(price_obj.get("id")) if price_obj.get("id") else None
 
 
 def _estrai_item_id_da_subscription(subscription_obj: dict) -> str | None:
-    items = (subscription_obj.get("items") or {}).get("data") or []
+    subscription_data = _stripe_obj_to_dict(subscription_obj)
+    items = (_stripe_obj_to_dict(subscription_data.get("items")).get("data")) or []
     if not items:
         return None
-    item_id = items[0].get("id")
+    item_id = _stripe_obj_to_dict(items[0]).get("id")
     return str(item_id) if item_id else None
 
 
@@ -126,7 +170,8 @@ def _estrai_current_period_end(subscription_obj: dict) -> int | None:
 
 
 def _estrai_subscription_id_da_checkout_session(checkout_session_obj: dict) -> str | None:
-    subscription = checkout_session_obj.get("subscription")
+    checkout_data = _stripe_obj_to_dict(checkout_session_obj)
+    subscription = checkout_data.get("subscription")
     if isinstance(subscription, str):
         return subscription
     if isinstance(subscription, dict):
@@ -182,6 +227,13 @@ def _errore_stripe_subscription_inesistente(exc: Exception) -> bool:
     )
 
 
+def _errore_portale_non_configurato(exc: Exception) -> bool:
+    if not isinstance(exc, stripe.error.InvalidRequestError):
+        return False
+    message = str(exc).lower()
+    return "billing portal" in message and "configuration" in message
+
+
 async def _assicurati_cliente_stripe(
     *,
     tenant_obj: Tenant,
@@ -190,12 +242,17 @@ async def _assicurati_cliente_stripe(
     forza_nuovo: bool = False,
 ) -> str:
     sottoscrizione = tenant_obj.sottoscrizione
+    customer_id_attuale = (
+        _clean_stripe_id(sottoscrizione.id_stripe_cliente)
+        if sottoscrizione is not None
+        else None
+    )
     if (
         sottoscrizione
-        and sottoscrizione.id_stripe_cliente
+        and customer_id_attuale
         and not forza_nuovo
     ):
-        return str(sottoscrizione.id_stripe_cliente)
+        return customer_id_attuale
 
     customer = stripe.Customer.create(
         email=utente_corrente.email,
@@ -205,7 +262,10 @@ async def _assicurati_cliente_stripe(
             "tenant_slug": tenant_obj.slug,
         },
     )
-    customer_id = str(customer.get("id"))
+    customer = _stripe_obj_to_dict(customer)
+    customer_id = _clean_stripe_id(customer.get("id"))
+    if not customer_id:
+        raise RuntimeError("Stripe Customer.create non ha restituito un customer id valido")
 
     if sottoscrizione is not None:
         sottoscrizione.id_stripe_cliente = customer_id
@@ -298,6 +358,7 @@ async def sottoscrizioni_gestisci_page(
                 stripe_session_id,
                 expand=["subscription"],
             )
+            checkout_session = _stripe_obj_to_dict(checkout_session)
             subscription_id = _estrai_subscription_id_da_checkout_session(checkout_session)
             if subscription_id:
                 sub_obj = stripe.Subscription.retrieve(
@@ -309,6 +370,7 @@ async def sottoscrizioni_gestisci_page(
                         "latest_invoice.payment_intent",
                     ],
                 )
+                sub_obj = _stripe_obj_to_dict(sub_obj)
                 status_effettivo = stato_stripe_effettivo(
                     str(sub_obj.get("status") or ""),
                     payment_status=str(checkout_session.get("payment_status") or ""),
@@ -317,8 +379,8 @@ async def sottoscrizioni_gestisci_page(
                 await sincronizza_sottoscrizione_da_stripe(
                     db,
                     tenant_id=tenant_obj.id,
-                    stripe_subscription_id=str(sub_obj.get("id")),
-                    stripe_customer_id=str(sub_obj.get("customer")),
+                    stripe_subscription_id=_clean_stripe_id(sub_obj.get("id")),
+                    stripe_customer_id=_clean_stripe_id(sub_obj.get("customer")),
                     stripe_status=status_effettivo,
                     stripe_price_id=_estrai_price_id_da_subscription(sub_obj),
                     current_period_end_unix=_estrai_current_period_end(sub_obj),
@@ -362,8 +424,13 @@ async def sottoscrizioni_gestisci_page(
     piano_corrente = sottoscrizione.piano.value if sottoscrizione else None
     stato_piano = sottoscrizione.stato_piano.value if sottoscrizione else None
     is_trial = stato_piano == "prova"
+    stripe_subscription_id = (
+        _clean_stripe_id(sottoscrizione.id_stripe_sottoscrizione)
+        if sottoscrizione is not None
+        else None
+    )
     ha_sottoscrizione_stripe = bool(
-        sottoscrizione and sottoscrizione.id_stripe_sottoscrizione
+        sottoscrizione and stripe_subscription_id
     )
 
     return templates.TemplateResponse(
@@ -428,6 +495,7 @@ async def sottoscrizioni_cambia_piano_submit(
             tenant_slug,
             errore="Sottoscrizione tenant non trovata.",
         )
+    stripe_subscription_id = _clean_stripe_id(sottoscrizione.id_stripe_sottoscrizione)
 
     customer_id = await _assicurati_cliente_stripe(
         tenant_obj=tenant_obj,
@@ -436,11 +504,11 @@ async def sottoscrizioni_cambia_piano_submit(
     )
 
     try:
-        deve_aprire_checkout = not bool(sottoscrizione.id_stripe_sottoscrizione)
+        deve_aprire_checkout = not bool(stripe_subscription_id)
         if not deve_aprire_checkout:
             try:
                 subscription_obj = stripe.Subscription.retrieve(
-                    str(sottoscrizione.id_stripe_sottoscrizione),
+                    str(stripe_subscription_id),
                     expand=[
                         "items.data.price",
                         "latest_invoice",
@@ -448,6 +516,7 @@ async def sottoscrizioni_cambia_piano_submit(
                         "latest_invoice.payment_intent",
                     ],
                 )
+                subscription_obj = _stripe_obj_to_dict(subscription_obj)
                 stato_corrente = str(subscription_obj.get("status") or "")
                 if stato_corrente in {"canceled", "incomplete_expired"}:
                     deve_aprire_checkout = True
@@ -456,6 +525,7 @@ async def sottoscrizioni_cambia_piano_submit(
                     raise
                 sottoscrizione.id_stripe_sottoscrizione = None
                 await db.commit()
+                stripe_subscription_id = None
                 deve_aprire_checkout = True
 
         if not deve_aprire_checkout:
@@ -467,11 +537,12 @@ async def sottoscrizioni_cambia_piano_submit(
                 )
 
             updated = stripe.Subscription.modify(
-                str(sottoscrizione.id_stripe_sottoscrizione),
+                str(stripe_subscription_id),
                 cancel_at_period_end=False,
                 proration_behavior="create_prorations",
                 items=[{"id": item_id, "price": price_id}],
             )
+            updated = _stripe_obj_to_dict(updated)
             invoice_paid_flag = invoice_pagata_da_subscription_obj(updated)
             status_effettivo = stato_stripe_effettivo(
                 str(updated.get("status") or ""),
@@ -480,8 +551,8 @@ async def sottoscrizioni_cambia_piano_submit(
             await sincronizza_sottoscrizione_da_stripe(
                 db,
                 tenant_id=tenant_id,
-                stripe_subscription_id=str(updated.get("id")),
-                stripe_customer_id=str(updated.get("customer")),
+                stripe_subscription_id=_clean_stripe_id(updated.get("id")),
+                stripe_customer_id=_clean_stripe_id(updated.get("customer")),
                 stripe_status=status_effettivo,
                 stripe_price_id=_estrai_price_id_da_subscription(updated),
                 current_period_end_unix=_estrai_current_period_end(updated),
@@ -521,6 +592,7 @@ async def sottoscrizioni_cambia_piano_submit(
                     "metadata": {"tenant_id": str(tenant_id)},
                 },
             )
+            checkout_session = _stripe_obj_to_dict(checkout_session)
         except stripe.error.InvalidRequestError as exc:
             if not _errore_stripe_customer_inesistente(exc):
                 raise
@@ -541,6 +613,7 @@ async def sottoscrizioni_cambia_piano_submit(
                     "metadata": {"tenant_id": str(tenant_id)},
                 },
             )
+            checkout_session = _stripe_obj_to_dict(checkout_session)
     except Exception:
         await db.rollback()
         return _redirect_gestisci(
@@ -593,6 +666,16 @@ async def sottoscrizioni_portal_submit(
             tenant_slug,
             errore="Sottoscrizione tenant non trovata.",
         )
+    stato_notifica = (
+        sottoscrizione.stato_piano.value
+        if getattr(sottoscrizione, "stato_piano", None) is not None
+        else "n/d"
+    )
+    piano_notifica = (
+        sottoscrizione.piano.value
+        if getattr(sottoscrizione, "piano", None) is not None
+        else "n/d"
+    )
 
     customer_id = await _assicurati_cliente_stripe(
         tenant_obj=tenant_obj,
@@ -606,9 +689,16 @@ async def sottoscrizioni_portal_submit(
                 customer=customer_id,
                 return_url=_url_assoluto(_gestisci_base_url(tenant_slug)),
             )
+            sessione_portale = _stripe_obj_to_dict(sessione_portale)
         except stripe.error.InvalidRequestError as exc:
             if not _errore_stripe_customer_inesistente(exc):
                 raise
+            logger.warning(
+                "Customer Stripe non trovato in portal_submit. tenant=%s customer_id=%s err=%s",
+                tenant_slug,
+                customer_id,
+                exc,
+            )
             customer_id = await _assicurati_cliente_stripe(
                 tenant_obj=tenant_obj,
                 utente_corrente=utente_corrente,
@@ -619,7 +709,32 @@ async def sottoscrizioni_portal_submit(
                 customer=customer_id,
                 return_url=_url_assoluto(_gestisci_base_url(tenant_slug)),
             )
+            sessione_portale = _stripe_obj_to_dict(sessione_portale)
+    except stripe.error.InvalidRequestError as exc:
+        logger.warning(
+            "Errore Stripe apertura Billing Portal. tenant=%s customer_id=%s err=%s",
+            tenant_slug,
+            customer_id,
+            exc,
+        )
+        if _errore_portale_non_configurato(exc):
+            return _redirect_gestisci(
+                tenant_slug,
+                errore=(
+                    "Billing Portal non configurato su Stripe. "
+                    "Abilitalo dalla Dashboard Stripe."
+                ),
+            )
+        return _redirect_gestisci(
+            tenant_slug,
+            errore="Impossibile aprire il portale Stripe.",
+        )
     except Exception:
+        logger.exception(
+            "Errore inatteso apertura Billing Portal. tenant=%s customer_id=%s",
+            tenant_slug,
+            customer_id,
+        )
         return _redirect_gestisci(
             tenant_slug,
             errore="Impossibile aprire il portale Stripe.",
@@ -636,16 +751,8 @@ async def sottoscrizioni_portal_submit(
         destinatario=utente_corrente.email,
         nome_tenant=tenant_obj.nome,
         operazione="Accesso Billing Portal",
-        stato=(
-            tenant_obj.sottoscrizione.stato_piano.value
-            if tenant_obj.sottoscrizione
-            else "n/d"
-        ),
-        piano=(
-            tenant_obj.sottoscrizione.piano.value
-            if tenant_obj.sottoscrizione
-            else "n/d"
-        ),
+        stato=stato_notifica,
+        piano=piano_notifica,
         dettagli="È stato richiesto l'accesso al Billing Portal Stripe.",
     )
     if request.headers.get("HX-Request") == "true":
@@ -673,17 +780,28 @@ async def sottoscrizioni_annulla_submit(
         )
 
     sottoscrizione = tenant_obj.sottoscrizione
-    if sottoscrizione is None or not sottoscrizione.id_stripe_sottoscrizione:
+    stripe_subscription_id = (
+        _clean_stripe_id(sottoscrizione.id_stripe_sottoscrizione)
+        if sottoscrizione is not None
+        else None
+    )
+    if sottoscrizione is None or not stripe_subscription_id:
         return _redirect_gestisci(
             tenant_slug,
             errore="Nessuna sottoscrizione Stripe da annullare.",
         )
+    piano_notifica = (
+        sottoscrizione.piano.value
+        if getattr(sottoscrizione, "piano", None) is not None
+        else "n/d"
+    )
 
     try:
         updated = stripe.Subscription.modify(
-            str(sottoscrizione.id_stripe_sottoscrizione),
+            str(stripe_subscription_id),
             cancel_at_period_end=True,
         )
+        updated = _stripe_obj_to_dict(updated)
         status_effettivo = stato_stripe_effettivo(
             str(updated.get("status") or ""),
             invoice_paid=invoice_pagata_da_subscription_obj(updated),
@@ -691,15 +809,45 @@ async def sottoscrizioni_annulla_submit(
         await sincronizza_sottoscrizione_da_stripe(
             db,
             tenant_id=tenant_id,
-            stripe_subscription_id=str(updated.get("id")),
-            stripe_customer_id=str(updated.get("customer")),
+            stripe_subscription_id=_clean_stripe_id(updated.get("id")),
+            stripe_customer_id=_clean_stripe_id(updated.get("customer")),
             stripe_status=status_effettivo,
             stripe_price_id=_estrai_price_id_da_subscription(updated),
             current_period_end_unix=_estrai_current_period_end(updated),
         )
         await db.commit()
+    except stripe.error.InvalidRequestError as exc:
+        await db.rollback()
+        if _errore_stripe_subscription_inesistente(exc):
+            try:
+                sottoscrizione.id_stripe_sottoscrizione = None
+                await db.commit()
+            except Exception:
+                await db.rollback()
+            return _redirect_gestisci(
+                tenant_slug,
+                errore=(
+                    "La sottoscrizione Stripe non risulta più esistente. "
+                    "Seleziona un piano per riallineare il tenant."
+                ),
+            )
+        logger.warning(
+            "Errore Stripe annullamento a fine periodo. tenant=%s sub_id=%s err=%s",
+            tenant_slug,
+            stripe_subscription_id,
+            exc,
+        )
+        return _redirect_gestisci(
+            tenant_slug,
+            errore="Errore Stripe durante l'annullamento del piano.",
+        )
     except Exception:
         await db.rollback()
+        logger.exception(
+            "Errore inatteso annullamento a fine periodo. tenant=%s sub_id=%s",
+            tenant_slug,
+            stripe_subscription_id,
+        )
         return _redirect_gestisci(
             tenant_slug,
             errore="Errore durante l'annullamento del piano.",
@@ -711,11 +859,7 @@ async def sottoscrizioni_annulla_submit(
         nome_tenant=tenant_obj.nome,
         operazione="Annullamento a fine periodo richiesto",
         stato=str(updated.get("status") or ""),
-        piano=(
-            tenant_obj.sottoscrizione.piano.value
-            if tenant_obj.sottoscrizione
-            else "n/d"
-        ),
+        piano=piano_notifica,
         dettagli="Il rinnovo automatico è stato disattivato.",
     )
     return _redirect_gestisci(
@@ -742,17 +886,28 @@ async def sottoscrizioni_riattiva_submit(
         )
 
     sottoscrizione = tenant_obj.sottoscrizione
-    if sottoscrizione is None or not sottoscrizione.id_stripe_sottoscrizione:
+    stripe_subscription_id = (
+        _clean_stripe_id(sottoscrizione.id_stripe_sottoscrizione)
+        if sottoscrizione is not None
+        else None
+    )
+    if sottoscrizione is None or not stripe_subscription_id:
         return _redirect_gestisci(
             tenant_slug,
             errore="Nessuna sottoscrizione Stripe da riattivare.",
         )
+    piano_notifica = (
+        sottoscrizione.piano.value
+        if getattr(sottoscrizione, "piano", None) is not None
+        else "n/d"
+    )
 
     try:
         updated = stripe.Subscription.modify(
-            str(sottoscrizione.id_stripe_sottoscrizione),
+            str(stripe_subscription_id),
             cancel_at_period_end=False,
         )
+        updated = _stripe_obj_to_dict(updated)
         status_effettivo = stato_stripe_effettivo(
             str(updated.get("status") or ""),
             invoice_paid=invoice_pagata_da_subscription_obj(updated),
@@ -760,15 +915,45 @@ async def sottoscrizioni_riattiva_submit(
         await sincronizza_sottoscrizione_da_stripe(
             db,
             tenant_id=tenant_id,
-            stripe_subscription_id=str(updated.get("id")),
-            stripe_customer_id=str(updated.get("customer")),
+            stripe_subscription_id=_clean_stripe_id(updated.get("id")),
+            stripe_customer_id=_clean_stripe_id(updated.get("customer")),
             stripe_status=status_effettivo,
             stripe_price_id=_estrai_price_id_da_subscription(updated),
             current_period_end_unix=_estrai_current_period_end(updated),
         )
         await db.commit()
+    except stripe.error.InvalidRequestError as exc:
+        await db.rollback()
+        if _errore_stripe_subscription_inesistente(exc):
+            try:
+                sottoscrizione.id_stripe_sottoscrizione = None
+                await db.commit()
+            except Exception:
+                await db.rollback()
+            return _redirect_gestisci(
+                tenant_slug,
+                errore=(
+                    "La sottoscrizione Stripe non risulta più esistente. "
+                    "Seleziona un piano per riallineare il tenant."
+                ),
+            )
+        logger.warning(
+            "Errore Stripe riattivazione rinnovo. tenant=%s sub_id=%s err=%s",
+            tenant_slug,
+            stripe_subscription_id,
+            exc,
+        )
+        return _redirect_gestisci(
+            tenant_slug,
+            errore="Errore Stripe durante la riattivazione del piano.",
+        )
     except Exception:
         await db.rollback()
+        logger.exception(
+            "Errore inatteso riattivazione rinnovo. tenant=%s sub_id=%s",
+            tenant_slug,
+            stripe_subscription_id,
+        )
         return _redirect_gestisci(
             tenant_slug,
             errore="Errore durante la riattivazione del piano.",
@@ -780,11 +965,7 @@ async def sottoscrizioni_riattiva_submit(
         nome_tenant=tenant_obj.nome,
         operazione="Riattivazione rinnovo automatico",
         stato=str(updated.get("status") or ""),
-        piano=(
-            tenant_obj.sottoscrizione.piano.value
-            if tenant_obj.sottoscrizione
-            else "n/d"
-        ),
+        piano=piano_notifica,
         dettagli="Il rinnovo automatico è stato riattivato.",
     )
     return _redirect_gestisci(

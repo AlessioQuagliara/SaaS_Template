@@ -37,6 +37,51 @@ from app.core.billing_models import (
 stripe.api_key = settings.stripe_secret_key
 
 
+def _obj_to_dict(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+
+    for method_name in ("to_dict_recursive", "to_dict", "serialize", "_to_dict_recursive"):
+        method = getattr(value, method_name, None)
+        if callable(method):
+            try:
+                converted = method()
+            except Exception:
+                continue
+            if isinstance(converted, dict):
+                return converted
+
+    raw_data = getattr(value, "_data", None)
+    if isinstance(raw_data, dict):
+        return raw_data
+
+    try:
+        converted = dict(value)
+    except Exception:
+        return {}
+    return converted if isinstance(converted, dict) else {}
+
+
+def _obj_to_list(value: Any) -> list[Any]:
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    if value is None or isinstance(value, (str, bytes, dict)):
+        return []
+    try:
+        return list(value)
+    except Exception:
+        return []
+
+
+def _str_or_none(value: Any) -> str | None:
+    if value is None:
+        return None
+    value_str = str(value).strip()
+    return value_str if value_str else None
+
+
 def stato_interno_da_stato_stripe(stato_stripe: str | None) -> SottoscrizioniStati:
     if stato_stripe == "trialing":
         return SottoscrizioniStati.PROVA
@@ -68,10 +113,11 @@ def stato_stripe_effettivo(
 
 
 def invoice_pagata_da_subscription_obj(
-    subscription_obj: dict[str, Any] | dict,
+    subscription_obj: Any,
 ) -> bool:
-    latest_invoice = subscription_obj.get("latest_invoice")
-    if not isinstance(latest_invoice, dict):
+    subscription_data = _obj_to_dict(subscription_obj)
+    latest_invoice = _obj_to_dict(subscription_data.get("latest_invoice"))
+    if not latest_invoice:
         return False
 
     if latest_invoice.get("paid") is True:
@@ -80,38 +126,41 @@ def invoice_pagata_da_subscription_obj(
     if str(latest_invoice.get("status") or "").strip().lower() == "paid":
         return True
 
-    payment_intent = latest_invoice.get("payment_intent")
-    if isinstance(payment_intent, dict):
+    payment_intent = _obj_to_dict(latest_invoice.get("payment_intent"))
+    if payment_intent:
         return str(payment_intent.get("status") or "").strip().lower() == "succeeded"
 
     return False
 
 
 def estrai_current_period_end_unix_da_subscription(
-    subscription_obj: dict[str, Any] | dict,
+    subscription_obj: Any,
 ) -> int | None:
+    subscription_data = _obj_to_dict(subscription_obj)
+
     # Campo principale classico Stripe Subscription
-    value = _to_int(subscription_obj.get("current_period_end"))
+    value = _to_int(subscription_data.get("current_period_end"))
     if value is not None:
         return value
 
     # Fallback su eventuali varianti "current_period.end"
-    current_period = subscription_obj.get("current_period") or {}
-    if isinstance(current_period, dict):
-        value = _to_int(current_period.get("end"))
-        if value is not None:
-            return value
+    current_period = _obj_to_dict(subscription_data.get("current_period"))
+    value = _to_int(current_period.get("end"))
+    if value is not None:
+        return value
 
     # Fallback su latest_invoice, utile in alcuni payload/eventi
-    latest_invoice = subscription_obj.get("latest_invoice")
-    if isinstance(latest_invoice, dict):
+    latest_invoice = _obj_to_dict(subscription_data.get("latest_invoice"))
+    if latest_invoice:
         value = _to_int(latest_invoice.get("period_end"))
         if value is not None:
             return value
 
-        lines = (latest_invoice.get("lines") or {}).get("data") or []
+        lines_container = _obj_to_dict(latest_invoice.get("lines"))
+        lines = _obj_to_list(lines_container.get("data"))
         for line in lines:
-            period = line.get("period") or {}
+            line_data = _obj_to_dict(line)
+            period = _obj_to_dict(line_data.get("period"))
             value = _to_int(period.get("end"))
             if value is not None:
                 return value
@@ -119,11 +168,14 @@ def estrai_current_period_end_unix_da_subscription(
     return None
 
 
-def _estrai_price_id_da_subscription(subscription_obj: dict[str, Any] | dict) -> str | None:
-    items = (subscription_obj.get("items") or {}).get("data") or []
+def _estrai_price_id_da_subscription(subscription_obj: Any) -> str | None:
+    subscription_data = _obj_to_dict(subscription_obj)
+    items_container = _obj_to_dict(subscription_data.get("items"))
+    items = _obj_to_list(items_container.get("data"))
     if not items:
         return None
-    price_obj = items[0].get("price") or {}
+    item_data = _obj_to_dict(items[0])
+    price_obj = _obj_to_dict(item_data.get("price"))
     price_id = price_obj.get("id")
     return str(price_id) if price_id else None
 
@@ -138,8 +190,14 @@ def _errore_stripe_subscription_inesistente(exc: Exception) -> bool:
     )
 
 
-def _scegli_subscription_rilevante(subscriptions_obj: dict[str, Any] | dict) -> dict | None:
-    data = subscriptions_obj.get("data") or []
+def _scegli_subscription_rilevante(subscriptions_obj: Any) -> dict[str, Any] | None:
+    subscriptions_data = _obj_to_dict(subscriptions_obj)
+    data_raw = _obj_to_list(subscriptions_data.get("data"))
+    data: list[dict[str, Any]] = []
+    for item in data_raw:
+        item_data = _obj_to_dict(item)
+        if item_data:
+            data.append(item_data)
     if not data:
         return None
 
@@ -167,12 +225,17 @@ async def sincronizza_sottoscrizione_tenant_live(
     *,
     tenant_obj: Tenant,
 ) -> tuple[Sottoscrizione | None, bool, bool]:
-    sottoscrizione = tenant_obj.sottoscrizione
+    tenant_id = tenant_obj.id
+    risultato_sottoscrizione = await db.execute(
+        select(Sottoscrizione)
+        .where(Sottoscrizione.tenant_id == tenant_id)
+        .limit(1)
+    )
+    sottoscrizione = risultato_sottoscrizione.scalar_one_or_none()
     if not stripe_live_sync_configurato() or sottoscrizione is None:
         return sottoscrizione, False, False
 
-    tenant_id = tenant_obj.id
-    sub_obj = None
+    sub_obj: dict[str, Any] | None = None
     cancel_at_period_end = False
     verifica_live_ok = False
 
@@ -187,11 +250,11 @@ async def sincronizza_sottoscrizione_tenant_live(
                     "latest_invoice.payment_intent",
                 ],
             )
+            sub_obj = _obj_to_dict(sub_obj)
             verifica_live_ok = True
         except stripe.error.InvalidRequestError as exc:
             if not _errore_stripe_subscription_inesistente(exc):
-                await db.rollback()
-                return tenant_obj.sottoscrizione, False, False
+                return None, False, False
             try:
                 sottoscrizione.id_stripe_sottoscrizione = None
                 await db.commit()
@@ -208,8 +271,7 @@ async def sincronizza_sottoscrizione_tenant_live(
             sub_obj = _scegli_subscription_rilevante(elenco)
             verifica_live_ok = True
         except Exception:
-            await db.rollback()
-            return tenant_obj.sottoscrizione, False, False
+            return None, False, False
 
     if sub_obj is None:
         if verifica_live_ok and sottoscrizione is not None:
@@ -238,15 +300,15 @@ async def sincronizza_sottoscrizione_tenant_live(
                     await db.commit()
                 except Exception:
                     await db.rollback()
-                    return tenant_obj.sottoscrizione, False, False
+                    return None, False, False
         return sottoscrizione, False, verifica_live_ok
 
     try:
         sottoscrizione_aggiornata = await sincronizza_sottoscrizione_da_stripe(
             db,
             tenant_id=tenant_id,
-            stripe_subscription_id=str(sub_obj.get("id")),
-            stripe_customer_id=str(sub_obj.get("customer")),
+            stripe_subscription_id=_str_or_none(sub_obj.get("id")),
+            stripe_customer_id=_str_or_none(sub_obj.get("customer")),
             stripe_status=stato_stripe_effettivo(
                 str(sub_obj.get("status") or ""),
                 invoice_paid=invoice_pagata_da_subscription_obj(sub_obj),
@@ -260,7 +322,7 @@ async def sincronizza_sottoscrizione_tenant_live(
         cancel_at_period_end = bool(sub_obj.get("cancel_at_period_end"))
     except Exception:
         await db.rollback()
-        return tenant_obj.sottoscrizione, False, False
+        return None, False, False
 
     return sottoscrizione, cancel_at_period_end, verifica_live_ok
 

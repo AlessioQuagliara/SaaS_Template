@@ -78,12 +78,18 @@
           {% endif %}
         </p>
 
-        <form method="post" action="/{{ tenant.slug }}/admin/sottoscrizioni/gestisci/piano" class="mt-5" hx-boost="false">
+        <form
+          method="post"
+          action="/{{ tenant.slug }}/admin/sottoscrizioni/gestisci/piano"
+          class="mt-5"
+          hx-boost="false"
+          data-loading-submit="true"
+        >
           <input type="hidden" name="piano" value="{{ p.key }}">
           {% if disabled %}
             {{ secondary("Seleziona " ~ p.label, attrs={"disabled": "disabled"}) }}
           {% else %}
-            {{ primary("Seleziona " ~ p.label, type="submit") }}
+            {{ primary("Seleziona " ~ p.label, type="submit", attrs={"data-loading-text": "Apertura checkout..."}) }}
           {% endif %}
         </form>
       </section>
@@ -97,25 +103,30 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <form method="post" action="/{{ tenant.slug }}/admin/sottoscrizioni/gestisci/portal" hx-boost="false">
+      <form
+        method="post"
+        action="/{{ tenant.slug }}/admin/sottoscrizioni/gestisci/portal"
+        hx-boost="false"
+        data-loading-submit="true"
+      >
         {% if stripe_enabled %}
-          {{ secondary("Apri Billing Portal", type="submit") }}
+          {{ secondary("Apri Billing Portal", type="submit", attrs={"data-loading-text": "Apertura portal..."}) }}
         {% else %}
           {{ secondary("Apri Billing Portal", attrs={"disabled": "disabled"}) }}
         {% endif %}
       </form>
 
-      <form method="post" action="/{{ tenant.slug }}/admin/sottoscrizioni/gestisci/annulla">
+      <form method="post" action="/{{ tenant.slug }}/admin/sottoscrizioni/gestisci/annulla" data-loading-submit="true">
         {% if stripe_enabled and sottoscrizione and sottoscrizione.id_stripe_sottoscrizione and not cancel_at_period_end %}
-          {{ danger_btn("Annulla a fine periodo", type="submit") }}
+          {{ danger_btn("Annulla a fine periodo", type="submit", attrs={"data-loading-text": "Annullamento in corso..."}) }}
         {% else %}
           {{ danger_btn("Annulla a fine periodo", attrs={"disabled": "disabled"}) }}
         {% endif %}
       </form>
 
-      <form method="post" action="/{{ tenant.slug }}/admin/sottoscrizioni/gestisci/riattiva">
+      <form method="post" action="/{{ tenant.slug }}/admin/sottoscrizioni/gestisci/riattiva" data-loading-submit="true">
         {% if stripe_enabled and sottoscrizione and sottoscrizione.id_stripe_sottoscrizione and cancel_at_period_end %}
-          {{ primary("Riattiva rinnovo", type="submit") }}
+          {{ primary("Riattiva rinnovo", type="submit", attrs={"data-loading-text": "Riattivazione in corso..."}) }}
         {% else %}
           {{ primary("Riattiva rinnovo", attrs={"disabled": "disabled"}) }}
         {% endif %}
@@ -123,4 +134,26 @@
     </div>
   </section>
 </div>
+
+<script>
+  (function () {
+    const forms = document.querySelectorAll("form[data-loading-submit='true']");
+    forms.forEach((form) => {
+      form.addEventListener("submit", () => {
+        if (form.dataset.submitting === "true") return;
+        const submitButton = form.querySelector("button[type='submit']");
+        if (!submitButton || submitButton.disabled) return;
+
+        form.dataset.submitting = "true";
+        submitButton.disabled = true;
+        submitButton.setAttribute("aria-busy", "true");
+
+        const loadingText =
+          submitButton.getAttribute("data-loading-text") || "Operazione in corso...";
+        submitButton.innerHTML =
+          "<i class='ri-loader-4-line animate-spin'></i>&nbsp;&nbsp;" + loadingText;
+      });
+    });
+  })();
+</script>
 {% endblock %}

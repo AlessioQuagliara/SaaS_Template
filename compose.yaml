@@ -9,7 +9,7 @@ services:
 # -------------------------------------------------------------------------------
 
   traefik:
-    image: traefik:v3.6.2
+    image: traefik:v3.6.12
     container_name: traefik
     restart: unless-stopped
     command:
@@ -73,7 +73,7 @@ services:
 # -------------------------------------------------------------------------------
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.8-alpine@sha256:8b81dd37ff027bec4e516d41acfbe9fe2460070dc6d4a4570a2ac5b9d59df065
     container_name: saas_redis
     restart: unless-stopped
     command: redis-server --appendonly yes
@@ -197,7 +197,7 @@ services:
 
   LiteLLM:
     container_name: litellm
-    image: ghcr.io/berriai/litellm:main-latest
+    image: ghcr.io/berriai/litellm:main-stable@sha256:9e1536c6a9219519f024f221706b20b012ca5176988164798adc5c7fe011e5d5
     volumes:
       - ./litellm_config.yaml:/app/config.yaml
     depends_on:
@@ -224,7 +224,7 @@ services:
 # ------------------------------------------------------------------------------- 
 
   n8n:
-    image: n8nio/n8n
+    image: n8nio/n8n:1.123.27@sha256:289a52a09f6dd3d5fa1f1345713e967b92fe920aff2dd263edd413ffe69de0e5
     env_file:
       - .env
     environment:

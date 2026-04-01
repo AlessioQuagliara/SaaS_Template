@@ -131,7 +131,12 @@ async def applica_policy_disattivazione_tenant(
     - stato SCADUTO/CANCELLATO: entra in SOSPESO per 14 giorni
     - stato SOSPESO: dopo 14 giorni, verifica live su Stripe e poi cancella in cascade
     """
-    sottoscrizione = tenant_obj.sottoscrizione
+    risultato_sottoscrizione = await db.execute(
+        select(Sottoscrizione)
+        .where(Sottoscrizione.tenant_id == tenant_obj.id)
+        .limit(1)
+    )
+    sottoscrizione = risultato_sottoscrizione.scalar_one_or_none()
     if sottoscrizione is None:
         return False
 
