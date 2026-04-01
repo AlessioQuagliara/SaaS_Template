@@ -16,7 +16,7 @@ from app.core.sessione import gestore_sessioni
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from app.core import engine
 
@@ -83,6 +83,37 @@ def create_app() -> FastAPI:
         )
         
         app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+        @app.middleware("http")
+        async def aggiungi_header_sicurezza(request: Request, call_next):
+                response = await call_next(request)
+
+                response.headers.setdefault("X-Frame-Options", "DENY")
+                response.headers.setdefault("X-Content-Type-Options", "nosniff")
+                response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+
+                percorso = request.url.path
+                docs_path = (
+                        percorso.startswith("/docs")
+                        or percorso.startswith("/redoc")
+                        or percorso.startswith("/openapi")
+                )
+                if not docs_path:
+                        response.headers.setdefault(
+                                "Content-Security-Policy",
+                                "default-src 'self'; "
+                                "base-uri 'self'; "
+                                "object-src 'none'; "
+                                "frame-ancestors 'none'; "
+                                "form-action 'self'; "
+                                "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; "
+                                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+                                "img-src 'self' data: https:; "
+                                "font-src 'self' data: https://fonts.gstatic.com; "
+                                "connect-src 'self' https: wss:",
+                        )
+
+                return response
 
         # Healthcheck (async)
         @app.get("/health", tags=["system"])

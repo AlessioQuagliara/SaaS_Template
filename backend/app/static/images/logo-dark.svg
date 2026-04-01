@@ -11,7 +11,7 @@
 
     <linearGradient id="th-dark" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#1C2233" />
-      <stop offset="100%" stop-color="#0D111A" />
+      <stop offset="100%" stop-color="#d4d5d6" />
     </linearGradient>
 
     <filter id="th-soft-glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -32,12 +32,12 @@
     </filter>
 
     <filter id="th-shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.28" />
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#cbcbcb" flood-opacity="0.28" />
     </filter>
   </defs>
 
   <!-- background -->
-  <rect width="460" height="130" rx="18" fill="#090C12" />
+  <rect width="460" height="130" rx="18" fill="#cccccd" />
 
   <!-- icon -->
   <g transform="translate(26 20)" filter="url(#th-shadow)">
@@ -111,7 +111,7 @@
       font-size="42"
       font-weight="800"
       letter-spacing="-1.4"
-      fill="#F4F7FB"
+      fill="#161616"
     >
       Tenant
     </text>
@@ -135,7 +135,7 @@
       font-size="11"
       font-weight="600"
       letter-spacing="2.1"
-      fill="#B8C2D6"
+      fill="#292929"
       opacity="0.9"
     >
       FAST MULTI-TENANT SOFTWARE

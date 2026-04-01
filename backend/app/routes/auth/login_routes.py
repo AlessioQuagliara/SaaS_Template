@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Form, Request, Response, status
 
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from sqlalchemy.exc import ProgrammingError, SQLAlchemyError
 
@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import templates
 
-from app.core.auth import SESSION_COOKIE_NAME, prendi_utente_corrente
+from app.core.auth import SESSION_COOKIE_NAME
 
 from app.core.csrf import csrf_protezione
 
@@ -79,6 +79,7 @@ async def login_submit(
     db: AsyncSession = Depends(get_db),
 ):
     """Login con CSRF e sessione Redis"""
+    email_normalizzata = email.strip().lower()
 
     # ---- Verifica CSRF --------------------------------------
     if not csrf_protezione.valida_token(sessione_temp, csrf_token):
@@ -96,7 +97,7 @@ async def login_submit(
         # ---- Trova utente ---------------------------------------
         risultato = await db.execute(
             select(Utente).where(
-                Utente.email == email,
+                func.lower(Utente.email) == email_normalizzata,
             )
         )
 
@@ -133,7 +134,7 @@ async def login_submit(
         slug_tenant_next = estrai_slug_tenant_da_next(next_path)
         tenant_candidati = await carica_tenant_accessibili_utente(db, utente.id)
     except ProgrammingError:
-        logger.exception("Login fallito: schema DB non pronto (email=%s)", email)
+        logger.exception("Login fallito: schema DB non pronto (email=%s)", email_normalizzata)
         return templates.TemplateResponse(
             request,
             "auth/login.html",
@@ -144,7 +145,10 @@ async def login_submit(
             status_code=200,
         )
     except SQLAlchemyError:
-        logger.exception("Login fallito: errore database inatteso (email=%s)", email)
+        logger.exception(
+            "Login fallito: errore database inatteso (email=%s)",
+            email_normalizzata,
+        )
         return templates.TemplateResponse(
             request,
             "auth/login.html",
@@ -313,9 +317,8 @@ async def select_tenant_submit(
 @router.post("/logout")
 async def logout_submit(
     request: Request,
-    utente: Utente = Depends(prendi_utente_corrente),
 ):
-    """Logout con cancellazione sessione Redis"""
+    """Logout idempotente: cancella sessione se presente e rimanda al login."""
     id_sessione_utente = request.cookies.get(SESSION_COOKIE_NAME)
 
     if id_sessione_utente:

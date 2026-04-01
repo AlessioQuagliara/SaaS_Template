@@ -134,9 +134,9 @@ def contesto_base_template(richiesta: Request, area_admin: bool) -> dict[str, st
     """
     path_completo = percorso_completo(richiesta)
     slug_tenant = estrai_slug_tenant(richiesta.url.path)
-    url_home_pubblica = settings.frontend_base_url.rstrip("/")
+    url_home_pubblica = settings.app_base_url.rstrip("/")
     url_dashboard_admin = (
-        f"/{slug_tenant}/admin/dashboard"
+        f"/{slug_tenant}/auth/login"
         if slug_tenant
         else url_home_pubblica
     )

@@ -2,54 +2,36 @@
 <!-- backend/app/templates/components/theme_Selector-->
 <!-- ======================================================================================= -->
 
-<!-- Per selezione tema. -->
+<!-- Selettore tema dark/light senza dipendenze Alpine (CSP-safe). -->
 
 <button
     type="button"
-    class="relative inline-flex h-8 w-14 items-center rounded-full px-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-    aria-label="Toggle dark mode"
+    class="relative inline-flex h-8 w-14 items-center rounded-full border border-gray-200 bg-gray-100 px-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-gray-700 dark:bg-gray-700 dark:focus:ring-offset-gray-900"
+    aria-label="Cambia tema"
     role="switch"
-    x-data="{
-      isDark: false,
-      init() {
-        const stored = localStorage.getItem('color-theme');
-        if (stored) {
-          this.isDark = stored === 'dark';
-        } else {
-          this.isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        }
-        this.apply();
-      },
-      apply() {
-        if (this.isDark) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      },
-      toggle() {
-        this.isDark = !this.isDark;
-        localStorage.setItem('color-theme', this.isDark ? 'dark' : 'light');
-        this.apply();
-      }
-    }"
-    x-init="init()"
-    @click="toggle()"
-    :aria-checked="isDark"
-    :class="isDark ? 'bg-gray-700' : 'bg-gray-100'"
+    aria-checked="false"
+    data-theme-toggle
 >
-    <span class="absolute left-2 text-yellow-500 dark:text-yellow-300" aria-hidden="true">
+    <span
+      class="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-yellow-500 transition-opacity duration-200"
+      aria-hidden="true"
+      data-theme-track-icon-light
+    >
       <i class="ri-sun-line text-xs"></i>
     </span>
-    <span class="absolute right-2 text-indigo-300 dark:text-indigo-200" aria-hidden="true">
+    <span
+      class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-indigo-300 transition-opacity duration-200"
+      aria-hidden="true"
+      data-theme-track-icon-dark
+    >
       <i class="ri-moon-line text-xs"></i>
     </span>
 
     <span
-      class="relative z-10 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white shadow transform transition-transform duration-200"
-      :class="isDark ? 'translate-x-6 text-indigo-600' : 'translate-x-0 text-yellow-500'"
+      class="pointer-events-none relative z-10 inline-flex h-6 w-6 transform items-center justify-center rounded-full bg-white shadow transition-transform duration-200 translate-x-0"
+      data-theme-thumb
     >
-      <i x-show="!isDark" class="ri-sun-line text-sm" aria-hidden="true"></i>
-      <i x-show="isDark" class="ri-moon-line text-sm" aria-hidden="true"></i>
+      <i class="ri-sun-line text-sm text-yellow-500" aria-hidden="true" data-theme-thumb-icon-light></i>
+      <i class="ri-moon-line hidden text-sm text-indigo-600" aria-hidden="true" data-theme-thumb-icon-dark></i>
     </span>
 </button>

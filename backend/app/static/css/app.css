@@ -5,6 +5,34 @@
   display: none !important;
 }
 
+/* Hero auth con pattern a quadrati */
+.auth-hero-grid {
+  background-color: #090f1b;
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.auth-hero-grid__pattern {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.38;
+}
+
+.auth-hero-grid__glow {
+  background:
+    radial-gradient(
+      58% 42% at 18% 18%,
+      rgba(255, 216, 77, 0.24) 0%,
+      rgba(255, 216, 77, 0) 72%
+    ),
+    radial-gradient(
+      46% 34% at 82% 68%,
+      rgba(59, 130, 246, 0.2) 0%,
+      rgba(59, 130, 246, 0) 74%
+    );
+}
+
 /* Qui puoi definire altre regole globali, ad esempio override per componenti
    o variabili di colore personalizzate. Tenendo tutto qui, rendi più semplice
    gestire lo stile in un unico punto. */

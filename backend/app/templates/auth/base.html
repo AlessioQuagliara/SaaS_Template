@@ -9,15 +9,36 @@
 {% block body %}
 <div class="min-h-screen grid md:grid-cols-2">
     {# Colonna sinistra - Visibile solo su md+ #}
-    <div class="hidden md:block relative bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2020&q=80');">
-        {# Overlay scuro per leggibilità #}
-        <div class="absolute inset-0 bg-gray-900 bg-opacity-60"></div>
-        
-        {# Logo centrato (versione light per contrasto con sfondo scuro) #}
-        <div class="absolute inset-0 flex items-center justify-center">
-            <img src="{{ url_for('static', path='/images/logo-light.png') }}" alt="Logo" class="h-16 w-auto dark:hidden">
-            <img src="{{ url_for('static', path='/images/logo-light.png') }}" alt="Logo" class="hidden h-16 w-auto dark:block">
-        </div>
+    <div class="hidden md:block relative overflow-hidden auth-hero-grid">
+        <div class="auth-hero-grid__pattern pointer-events-none absolute inset-0" aria-hidden="true"></div>
+        <div class="auth-hero-grid__glow pointer-events-none absolute inset-0" aria-hidden="true"></div>
+
+        <section class="relative z-10 flex h-full flex-col justify-between p-10 lg:p-14">
+            <div>
+                <div class="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-amber-300/90">
+                    <img src="{{ url_for('static', path='/images/mini-logo-white.svg') }}" alt="TenantHawk logo mark" class="h-5 w-auto">
+                    <p>TenantHawk - template SaaS multi-tenant MIT</p>
+                </div>
+
+                <h1 class="mt-4 text-4xl font-semibold leading-[0.95] text-white lg:text-6xl">
+                    TenantHawk
+                </h1>
+
+                <p class="mt-5 max-w-xl text-sm leading-7 text-slate-200 lg:text-base">
+                    Costruisci SaaS multi-tenant piu velocemente, con una base solida e senza reinventare autenticazione, routing e tenant isolation.
+                </p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="inline-flex items-center gap-2 rounded-full border border-slate-600/80 bg-slate-900/40 px-4 py-2 text-xs uppercase tracking-[0.12em] text-slate-100">
+                    <i class="ri-shield-check-line"></i>
+                    <span>Pronto per produzione</span>
+                </div>
+                <p class="text-xs uppercase tracking-[0.15em] text-slate-400">
+                    Open source MIT creato da Alessio Quagliara
+                </p>
+            </div>
+        </section>
     </div>
 
     {# Colonna destra - Form #}
@@ -25,8 +46,8 @@
         <div class="w-full max-w-md">
             {# Logo mobile (visibile solo su mobile) #}
             <div class="text-center md:hidden mb-8">
-                <img src="{{ url_for('static', path='/images/logo-dark.png') }}" alt="Logo" class="h-12 mx-auto dark:hidden">
-                <img src="{{ url_for('static', path='/images/logo-light.png') }}" alt="Logo" class="hidden h-12 mx-auto dark:block">
+                <img src="{{ url_for('static', path='/images/mini-logo-white.svg') }}" alt="Logo" class="h-12 mx-auto dark:hidden">
+                <img src="{{ url_for('static', path='/images/mini-logo.svg') }}" alt="Logo" class="hidden h-12 mx-auto dark:block">
             </div>
 
             {# Intestazione #}

@@ -9,8 +9,8 @@
     
     <!-- Brand -->
     <div class="h-16 flex items-center gap-2 border-b border-gray-200 dark:border-gray-800">
-      <img src="{{ url_for('static', path='/images/mini-logo.png') }}" class="h-8 w-8 dark:hidden" alt="Logo">
-      <img src="{{ url_for('static', path='/images/mini-logo-white.png') }}" class="hidden h-8 w-8 dark:block" alt="Logo">
+      <img src="{{ url_for('static', path='/images/mini-logo.svg') }}" class="h-8 w-8 dark:hidden" alt="Logo">
+      <img src="{{ url_for('static', path='/images/mini-logo-white.svg') }}" class="hidden h-8 w-8 dark:block" alt="Logo">
       <span class="font-semibold text-gray-900 dark:text-gray-100">TenantHawk</span>
     </div>
 
@@ -135,7 +135,7 @@
             {% include "components/theme_selector.html" %}
             
             <!-- Dropdown Menu -->
-            <div @click.away="open = false" x-show="open" x-transition class="absolute bottom-16 left-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 w-48">
+            <div @click.away="open = false" x-show="open" x-cloak x-transition class="absolute bottom-16 left-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 w-48">
 
               <a href="/{{ tenant.slug }}/admin/impostazioni" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <i class="ri-settings-3-line mr-2"></i> Impostazioni
